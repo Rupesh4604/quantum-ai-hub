@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QViT — Quantum Vision Transformers | Quantum AI Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css"/>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], tags: 'ams' },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">⬡ Quantum<span>AI</span>Hub</a>
+    <div class="nav-links">
+      <a href="../index.html">Papers</a>
+      <a href="../index.html#hardware">Hardware</a>
+      <a href="../index.html#conferences">Conferences</a>
+      <a href="qvit-cherrat-2024.html" class="active">QViT</a>
+      <a href="barren-plateaus-dla.html">Barren Plateaus</a>
+      <a href="hybrid-transformers.html">Transformers</a>
+      <a href="quddpm.html">Diffusion</a>
+      <a href="hhl-qsvt.html">HHL/QSVT</a>
+      <a href="discocat-lambeq.html">DisCoCat</a>
+    </div>
+    <div class="nav-search" title="Press / to search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" placeholder="Search…" readonly/>
+    </div>
+  </div>
+</nav>
+
+<div id="search-overlay">
+  <div class="search-box">
+    <input id="search-input" class="search-input" type="text" placeholder="Search papers, authors, topics…"/>
+    <div id="search-results" class="search-results"></div>
+    <div class="search-hint">↵ open · Esc close</div>
+  </div>
+</div>
+
+<div class="container-narrow">
+
+  <!-- Breadcrumb -->
+  <div style="padding-top:2rem">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href="../index.html#timeline">Papers</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>Quantum Vision Transformers</span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="paper-page-header">
+    <div class="paper-page-meta">
+      <span class="paper-year">2024</span>
+      <span class="tag tag-vision">Vision</span>
+      <span class="tag tag-hybrid">Hybrid Q-C</span>
+    </div>
+    <h1 class="paper-page-title">Quantum Vision Transformers</h1>
+    <div class="paper-page-authors">El Amine Cherrat, Iordanis Kerenidis, Natansh Mathur, Jonas Landman, Martin Strahm, Yun Yvonna Li</div>
+    <div class="paper-page-venue">Quantum (journal) · 2024 · <a href="https://arxiv.org/abs/2209.08167" target="_blank" style="color:var(--cyan)">arXiv:2209.08167</a></div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#overview">Overview &amp; Motivation</a></li>
+      <li><a href="#rbs-gate">The RBS Gate</a></li>
+      <li><a href="#orthogonal-layers">Orthogonal Quantum Layers</a></li>
+      <li><a href="#architecture">Model Architecture</a></li>
+      <li><a href="#attention">Quantum-Enhanced Attention</a></li>
+      <li><a href="#encoding">Data Encoding Strategies</a></li>
+      <li><a href="#complexity">Complexity &amp; Advantage</a></li>
+      <li><a href="#results">Experimental Results</a></li>
+      <li><a href="#bottlenecks">Open Bottlenecks</a></li>
+    </ol>
+  </div>
+
+  <!-- Section 1: Overview -->
+  <div class="content-section" id="overview">
+    <h2>1. Overview &amp; Motivation</h2>
+    <p>
+      Classical Vision Transformers (ViT) achieve state-of-the-art image recognition, but their linear projection layers
+      require $O(d^2)$ parameters per layer (where $d$ is the embedding dimension). The <strong>Quantum Vision Transformer (QViT)</strong>
+      proposes replacing these costly linear layers with <em>orthogonal quantum layers</em> built from
+      <strong>Reconfigurable Beam Splitter (RBS) gates</strong>, reducing the parameter count to $O(n)$
+      for an $n$-qubit circuit while implementing a $2^n \times 2^n$ orthogonal transformation.
+    </p>
+    <div class="callout">
+      <strong>Core idea:</strong> A parameterised quantum circuit on $n$ qubits encodes an orthogonal matrix of size $2^n \times 2^n$.
+      This is used as a drop-in replacement for the $W_Q$, $W_K$, $W_V$, and MLP projection matrices in ViT.
+    </div>
+    <p>
+      The architecture is hybrid: image patching, positional encoding, and the classification head remain classical,
+      while the projection matrices inside each Transformer block are quantum.
+    </p>
+  </div>
+
+  <!-- Section 2: RBS Gate -->
+  <div class="content-section" id="rbs-gate">
+    <h2>2. The Reconfigurable Beam Splitter (RBS) Gate</h2>
+    <p>
+      The foundational quantum primitive is the <strong>RBS gate</strong>, a two-qubit gate that performs
+      a parameterised beam-splitter operation in the $\{|01\rangle, |10\rangle\}$ subspace:
+    </p>
+    <div class="math-block">
+      $$U_{\text{RBS}}(\theta) = \begin{pmatrix} 1 & 0 & 0 & 0 \\ 0 & \cos\theta & -\sin\theta & 0 \\ 0 & \sin\theta & \cos\theta & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix}$$
+    </div>
+    <div class="math-label">Eq. (1) — RBS gate in the $\{|00\rangle, |01\rangle, |10\rangle, |11\rangle\}$ basis</div>
+
+    <p>The RBS gate acts as a controlled rotation: it only mixes $|01\rangle$ and $|10\rangle$ states, leaving $|00\rangle$ and $|11\rangle$ unchanged. This corresponds to a <em>Givens rotation</em> in the single-excitation subspace:</p>
+
+    <div class="math-block">
+      $$U_{\text{RBS}}(\theta): \begin{cases} |01\rangle \mapsto \cos\theta\,|01\rangle - \sin\theta\,|10\rangle \\ |10\rangle \mapsto \sin\theta\,|01\rangle + \cos\theta\,|10\rangle \end{cases}$$
+    </div>
+
+    <h3>Why RBS gates?</h3>
+    <p>Key properties that make RBS ideal for this purpose:</p>
+    <div class="highlight-box">
+      <strong>1. Particle-number preserving:</strong> RBS conserves the number of excitations, keeping the circuit within the single-excitation subspace — exponentially more efficient for encoding classical vectors.<br/><br/>
+      <strong>2. Orthogonal transformations:</strong> A pyramid of RBS gates implements an arbitrary $n \times n$ orthogonal matrix via the QR decomposition (Givens rotations).<br/><br/>
+      <strong>3. Hardware efficient:</strong> Implementable as a simple parameterised rotation between adjacent physical qubits with no ancilla.
+    </div>
+
+    <h3>Circuit representation</h3>
+    <div class="arch-diagram">
+<pre>
+  q₀ ──[RBS(θ₀₁)]──[RBS(θ₀₂)]────────── ...
+           │              │
+  q₁ ──[RBS(θ₀₁)]──[RBS(θ₁₂)]──[RBS(θ₁₃)]── ...
+                         │              │
+  q₂ ──────────────[RBS(θ₁₂)]──[RBS(θ₂₃)]── ...
+                                        │
+  q₃ ──────────────────────────[RBS(θ₂₃)]── ...
+
+  Pyramid depth: ⌊n/2⌋ layers → implements O(n) ∈ SO(2ⁿ)
+  Parameters: n(n-1)/2 for n-dimensional orthogonal matrix
+</pre>
+    </div>
+  </div>
+
+  <!-- Section 3: Orthogonal Layers -->
+  <div class="content-section" id="orthogonal-layers">
+    <h2>3. Orthogonal Quantum Layers</h2>
+    <p>
+      Consider $n$ qubits prepared in a computational basis state encoding a classical vector $\mathbf{x} \in \mathbb{R}^n$
+      via amplitude encoding in the single-excitation subspace:
+    </p>
+    <div class="math-block">
+      $$|\mathbf{x}\rangle = \sum_{i=1}^{n} x_i |e_i\rangle \quad \text{where } |e_i\rangle = |0\cdots 0\underbrace{1}_{i}\, 0\cdots 0\rangle$$
+    </div>
+    <div class="math-label">Eq. (2) — Amplitude encoding in single-excitation subspace</div>
+
+    <p>A pyramid of RBS gates with parameters $\boldsymbol{\theta}$ implements the unitary $U(\boldsymbol{\theta})$, which in the single-excitation subspace corresponds to an orthogonal matrix $O(\boldsymbol{\theta}) \in O(n)$:</p>
+
+    <div class="math-block">
+      $$U(\boldsymbol{\theta})\,|\mathbf{x}\rangle = |O(\boldsymbol{\theta})\,\mathbf{x}\rangle$$
+    </div>
+    <div class="math-label">Eq. (3) — Quantum orthogonal layer action</div>
+
+    <p>The full orthogonal layer (including bias) is:</p>
+    <div class="math-block">
+      $$\mathbf{y} = O(\boldsymbol{\theta})\,\mathbf{x} + \mathbf{b}$$
+    </div>
+
+    <h3>Comparison with Classical Linear Layer</h3>
+    <div style="overflow-x:auto;margin:1rem 0">
+    <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:.6rem 1rem;text-align:left;color:var(--muted)">Property</th>
+          <th style="padding:.6rem 1rem;text-align:left;color:var(--muted)">Classical Linear ($W \in \mathbb{R}^{d\times d}$)</th>
+          <th style="padding:.6rem 1rem;text-align:left;color:var(--muted)">Quantum Orthogonal (RBS pyramid)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.6rem 1rem">Parameters</td>
+          <td style="padding:.6rem 1rem;color:var(--amber)">$O(d^2)$</td>
+          <td style="padding:.6rem 1rem;color:var(--green)">$O(n) = O(\log_2 d)$</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.6rem 1rem">Expressivity</td>
+          <td style="padding:.6rem 1rem">Full $\mathbb{R}^{d\times d}$</td>
+          <td style="padding:.6rem 1rem">Orthogonal subgroup $O(d)$</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.6rem 1rem">Inference cost</td>
+          <td style="padding:.6rem 1rem;color:var(--amber)">$O(d^2)$</td>
+          <td style="padding:.6rem 1rem;color:var(--green)">$O(n^2) = O(\log^2 d)$ circuit depth</td>
+        </tr>
+        <tr>
+          <td style="padding:.6rem 1rem">Gradient</td>
+          <td style="padding:.6rem 1rem">Standard backprop</td>
+          <td style="padding:.6rem 1rem">Parameter-shift rule</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Section 4: Architecture -->
+  <div class="content-section" id="architecture">
+    <h2>4. Model Architecture</h2>
+    <p>The QViT replaces linear projection matrices inside each Transformer block with quantum orthogonal layers:</p>
+
+    <div class="arch-diagram">
+<pre>
+INPUT IMAGE (H×W×C)
+       │
+       ▼
+ ┌─────────────────────────────────┐
+ │   Patch Embedding (Classical)   │
+ │   Split into N patches → d-dim  │
+ └──────────────┬──────────────────┘
+                │
+       ▼ [N+1 tokens]
+ ┌─────────────────────────────────┐
+ │  + CLS token  + Pos. Embedding  │  (Classical)
+ └──────────────┬──────────────────┘
+                │
+    ┌───────────┴──────────────┐
+    │  Transformer Block × L    │
+    │                           │
+    │  ┌─────────────────────┐  │
+    │  │  Layer Norm         │  │  (Classical)
+    │  └──────────┬──────────┘  │
+    │             │              │
+    │  ┌──────────▼──────────┐  │
+    │  │  Quantum Multi-Head │  │
+    │  │  Self-Attention      │  │
+    │  │                     │  │
+    │  │  Q = U_Q(θ_Q)·x    │  │  ← Quantum Orthogonal Layer
+    │  │  K = U_K(θ_K)·x    │  │  ← Quantum Orthogonal Layer
+    │  │  V = U_V(θ_V)·x    │  │  ← Quantum Orthogonal Layer
+    │  │                     │  │
+    │  │  Attn = softmax(QKᵀ/√d)·V  │  (Classical computation)
+    │  └──────────┬──────────┘  │
+    │             │              │
+    │  ┌──────────▼──────────┐  │
+    │  │  + Residual         │  │  (Classical)
+    │  └──────────┬──────────┘  │
+    │             │              │
+    │  ┌──────────▼──────────┐  │
+    │  │  Layer Norm         │  │  (Classical)
+    │  └──────────┬──────────┘  │
+    │             │              │
+    │  ┌──────────▼──────────┐  │
+    │  │  Quantum MLP        │  │
+    │  │  U_1(θ₁)·x + b₁     │  │  ← Quantum Orthogonal Layer
+    │  │  ReLU               │  │
+    │  │  U_2(θ₂)·x + b₂     │  │  ← Quantum Orthogonal Layer
+    │  └──────────┬──────────┘  │
+    │             │              │
+    │  ┌──────────▼──────────┐  │
+    │  │  + Residual         │  │
+    │  └─────────────────────┘  │
+    └───────────┬──────────────┘
+                │
+       ▼ [CLS token]
+ ┌─────────────────────────────────┐
+ │  Classification Head (Classical) │
+ │  Linear → Softmax               │
+ └─────────────────────────────────┘
+       │
+       ▼
+  Class Probabilities
+</pre>
+    </div>
+
+    <h3>Quantum Circuit for Q/K/V Projection</h3>
+    <div class="arch-diagram">
+<pre>
+Classical input vector x ∈ ℝⁿ
+       │
+       ▼  (Amplitude encoding into single-excitation basis)
+|ψ_x⟩ = Σᵢ xᵢ|eᵢ⟩
+       │
+       ▼  (RBS pyramid with parameters θ)
+ q₀: ──●──────●────────── ...
+       │      │
+ q₁: ─[θ₀₁]──●──────●── ...
+              │      │
+ q₂: ────────[θ₁₂]──●── ...
+                     │
+ q₃: ───────────────[θ₂₃]── ...
+
+       ▼  (Measure all qubits → probability amplitudes)
+       │
+O(θ)·x  (orthogonal projection of x)
+</pre>
+    </div>
+
+  </div>
+
+  <!-- Section 5: Attention -->
+  <div class="content-section" id="attention">
+    <h2>5. Quantum-Enhanced Attention</h2>
+    <p>The standard multi-head self-attention computes:</p>
+    <div class="math-block">
+      $$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$
+    </div>
+    <div class="math-label">Eq. (4) — Classical scaled dot-product attention</div>
+
+    <p>In QViT, the projection matrices are replaced by quantum orthogonal layers:</p>
+    <div class="math-block">
+      $$Q = O_Q(\boldsymbol{\theta}_Q)\,X, \quad K = O_K(\boldsymbol{\theta}_K)\,X, \quad V = O_V(\boldsymbol{\theta}_V)\,X$$
+    </div>
+    <div class="math-label">Eq. (5) — Quantum projection layers; $O_*(\boldsymbol{\theta})$ is the orthogonal map from the RBS circuit</div>
+
+    <p>The attention computation itself remains classical — only the projections are quantum. This is a hybrid approach where quantum hardware handles the high-dimensional linear algebra while classical hardware performs the non-linear operations.</p>
+
+    <h3>Multi-Head Configuration</h3>
+    <p>For $h$ heads with dimension $d_k = d/h$ each:</p>
+    <div class="math-block">
+      $$\text{MHA}(X) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)\,O_O(\boldsymbol{\theta}_O)$$
+      $$\text{head}_i = \text{Attention}(O_{Q,i}X,\ O_{K,i}X,\ O_{V,i}X)$$
+    </div>
+    <div class="math-label">Eq. (6) — Multi-head quantum attention</div>
+  </div>
+
+  <!-- Section 6: Encoding -->
+  <div class="content-section" id="encoding">
+    <h2>6. Data Encoding Strategies</h2>
+    <p>Classical data must be loaded into quantum states. QViT uses <strong>amplitude encoding in the single-excitation subspace</strong>:</p>
+
+    <div class="math-block">
+      $$\text{Enc}(\mathbf{x}) = \frac{\mathbf{x}}{\|\mathbf{x}\|} \mapsto |\psi_\mathbf{x}\rangle = \sum_{i=1}^{n} \frac{x_i}{\|\mathbf{x}\|}\,|e_i\rangle$$
+    </div>
+    <div class="math-label">Eq. (7) — Single-excitation amplitude encoding ($n$ qubits encode $n$-dim vector)</div>
+
+    <div class="callout callout-warn">
+      <strong>Encoding bottleneck:</strong> Amplitude encoding requires $O(n)$ gates per vector preparation for single-excitation states (efficient!), but general amplitude encoding requires $O(2^n)$ gates. QViT specifically exploits the single-excitation subspace to avoid this exponential cost.
+    </div>
+
+    <h3>Comparison of encoding strategies</h3>
+    <div style="overflow-x:auto;margin:1rem 0">
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Strategy</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Qubits for $d$-dim</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Circuit Depth</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Use case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem"><strong>Basis encoding</strong></td>
+          <td style="padding:.5rem .8rem">$d$ qubits</td>
+          <td style="padding:.5rem .8rem">$O(1)$</td>
+          <td style="padding:.5rem .8rem">Binary/integer data</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem"><strong>Single-excitation</strong> (QViT)</td>
+          <td style="padding:.5rem .8rem">$d$ qubits</td>
+          <td style="padding:.5rem .8rem">$O(d)$</td>
+          <td style="padding:.5rem .8rem">Real-valued unit vectors</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem"><strong>Amplitude encoding</strong></td>
+          <td style="padding:.5rem .8rem">$\log_2 d$ qubits</td>
+          <td style="padding:.5rem .8rem">$O(d)$</td>
+          <td style="padding:.5rem .8rem">Compact representation</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem .8rem"><strong>FRQI</strong> (images)</td>
+          <td style="padding:.5rem .8rem">$1 + \log_2(HW)$ qubits</td>
+          <td style="padding:.5rem .8rem">$O(HW)$</td>
+          <td style="padding:.5rem .8rem">Pixel-level image encoding</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Section 7: Complexity -->
+  <div class="content-section" id="complexity">
+    <h2>7. Complexity &amp; Quantum Advantage</h2>
+
+    <div class="math-block">
+      $$\underbrace{O(d^2)}_{\text{Classical params per layer}} \quad\longrightarrow\quad \underbrace{O(n) = O(\log_2 d)}_{\text{Quantum params (RBS angles)}}$$
+    </div>
+    <div class="math-label">Eq. (8) — Parameter reduction for $d = 2^n$</div>
+
+    <p>The circuit depth for computing the orthogonal projection is:</p>
+    <div class="math-block">
+      $$D_{\text{circ}} = O(n^2) = O(\log^2 d)$$
+    </div>
+    <div class="math-label">Eq. (9) — RBS pyramid depth for full $n \times n$ orthogonal transformation</div>
+
+    <div class="callout">
+      <strong>Provable advantage regime:</strong> When $d \gg n$ (large embedding dimensions), the quantum projection layer computes in $O(\text{poly}(\log d))$ depth vs. $O(d^2)$ classical. This advantage is realised only with efficient state preparation and readout — e.g., via QRAM.
+    </div>
+
+    <h3>Gradient via Parameter-Shift Rule</h3>
+    <p>Training uses the quantum parameter-shift rule to compute exact gradients:</p>
+    <div class="math-block">
+      $$\frac{\partial \mathcal{L}}{\partial \theta_k} = \frac{1}{2}\left[\mathcal{L}\!\left(\theta_k + \frac{\pi}{2}\right) - \mathcal{L}\!\left(\theta_k - \frac{\pi}{2}\right)\right]$$
+    </div>
+    <div class="math-label">Eq. (10) — Parameter-shift rule for RBS angle gradients</div>
+  </div>
+
+  <!-- Section 8: Results -->
+  <div class="content-section" id="results">
+    <h2>8. Experimental Results</h2>
+    <div class="highlight-box">
+      <strong>Benchmarks (simulation):</strong><br/>
+      · CIFAR-10: QViT achieves ~85% top-1 accuracy vs. ViT baseline ~87% with significantly fewer parameters<br/>
+      · MNIST / Fashion-MNIST: Near-classical accuracy (98%+) with $4\times$ parameter reduction<br/>
+      · Model compression: QViT-Small (quantum projections) matches ViT-Base classification with $\sim$60% fewer parameters
+    </div>
+
+    <h3>Ablation: Quantum vs. Classical projection</h3>
+    <p>Key finding: the orthogonality constraint (inherent to quantum layers) acts as a regulariser, providing some accuracy improvement in low-data regimes. The primary benefit is parameter efficiency rather than outright accuracy gain.</p>
+  </div>
+
+  <!-- Section 9: Bottlenecks -->
+  <div class="content-section" id="bottlenecks">
+    <h2>9. Open Bottlenecks</h2>
+
+    <div class="callout callout-warn">
+      <strong>1. State preparation overhead:</strong> Loading classical data into quantum amplitude states requires $O(d)$ gates — this can dominate the circuit cost and negate advantage.
+    </div>
+    <div class="callout callout-warn">
+      <strong>2. Measurement collapse:</strong> Extracting the full output vector $O(\theta)\mathbf{x}$ requires $O(d)$ measurements (one per amplitude component). Tomography is expensive.
+    </div>
+    <div class="callout callout-warn">
+      <strong>3. Hardware noise:</strong> Current NISQ devices have $T_2$ coherence times that limit circuit depth. The RBS pyramid at scale requires $O(n^2)$ depth — challenging beyond $n \approx 20$ on today's hardware.
+    </div>
+    <div class="callout callout-warn">
+      <strong>4. Classical simulation:</strong> For small $d$ (current experiments), classical simulation of the quantum circuit is trivially efficient — no quantum speedup realised until fault-tolerant hardware scales.
+    </div>
+    <div class="callout callout-warn">
+      <strong>5. Orthogonality restriction:</strong> RBS layers implement orthogonal (not general linear) transformations. This restricts expressivity — mitigated by depth, but not proven sufficient for all tasks.
+    </div>
+
+    <div class="highlight-box" style="margin-top:1.5rem">
+      <strong>Open research directions:</strong> (i) QRAM-accelerated amplitude loading for real quantum speedup;
+      (ii) combining QViT with quantum error correction for fault-tolerant inference;
+      (iii) hybrid QViT where only the computationally expensive attention heads use quantum layers;
+      (iv) theoretical analysis of expressivity vs. classical ViT.
+    </div>
+  </div>
+
+  <!-- Related papers -->
+  <div class="divider"></div>
+  <div style="margin-bottom:3rem">
+    <h3 style="margin-bottom:1rem;color:var(--primary-l)">Related Papers</h3>
+    <div class="grid-2" style="gap:.75rem">
+      <a class="card" href="hybrid-transformers.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-nlp">NLP/LLM</span><span class="tag tag-hybrid">Hybrid Q-C</span></div>
+        <div style="font-weight:600;margin-top:.4rem">Quixer, HyQuT, QTHA</div>
+        <div style="font-size:.82rem;color:var(--muted)">Quantum transformers for language tasks</div>
+      </a>
+      <a class="card" href="barren-plateaus-dla.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-theory">Theory</span></div>
+        <div style="font-weight:600;margin-top:.4rem">Barren Plateaus &amp; DLA Theory</div>
+        <div style="font-size:.82rem;color:var(--muted)">Training challenges for deep quantum circuits</div>
+      </a>
+    </div>
+  </div>
+
+</div><!-- /container-narrow -->
+
+<footer>
+  <div class="container">
+    <p><a href="../index.html">← Back to Quantum AI Hub</a> · Last updated May 2026</p>
+  </div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

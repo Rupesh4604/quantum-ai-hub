@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quixer · HyQuT · QTHA — Quantum Transformers | Quantum AI Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css"/>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], tags: 'ams' },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">⬡ Quantum<span>AI</span>Hub</a>
+    <div class="nav-links">
+      <a href="../index.html">Papers</a>
+      <a href="qvit-cherrat-2024.html">QViT</a>
+      <a href="barren-plateaus-dla.html">Barren Plateaus</a>
+      <a href="hybrid-transformers.html" class="active">Transformers</a>
+      <a href="quddpm.html">Diffusion</a>
+      <a href="hhl-qsvt.html">HHL/QSVT</a>
+      <a href="discocat-lambeq.html">DisCoCat</a>
+    </div>
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search…" readonly/>
+    </div>
+  </div>
+</nav>
+<div id="search-overlay">
+  <div class="search-box">
+    <input id="search-input" class="search-input" type="text" placeholder="Search papers…"/>
+    <div id="search-results" class="search-results"></div>
+    <div class="search-hint">↵ open · Esc close</div>
+  </div>
+</div>
+
+<div class="container-narrow">
+  <div style="padding-top:2rem">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">/</span>
+      <a href="../index.html#timeline">Papers</a><span class="breadcrumb-sep">/</span>
+      <span>Hybrid Quantum Transformers</span>
+    </div>
+  </div>
+
+  <div class="paper-page-header">
+    <div class="paper-page-meta">
+      <span class="paper-year">2024</span>
+      <span class="tag tag-nlp">NLP/LLM</span>
+      <span class="tag tag-hybrid">Hybrid Q-C</span>
+    </div>
+    <h1 class="paper-page-title">Quantum Transformers for Language: Quixer · HyQuT · QTHA</h1>
+    <div class="paper-page-authors">Nguyen, Umeano, Bhatt et al. (Quixer); Chen, Zhang et al. (HyQuT)</div>
+    <div class="paper-page-venue">arXiv 2024 — <a href="https://arxiv.org/abs/2406.04305" target="_blank" style="color:var(--cyan)">Quixer: 2406.04305</a> · <a href="https://arxiv.org/abs/2412.00831" target="_blank" style="color:var(--cyan)">HyQuT: 2412.00831</a></div>
+  </div>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#landscape">Landscape of Quantum Transformers</a></li>
+      <li><a href="#quixer">Quixer: Full Quantum Self-Attention</a></li>
+      <li><a href="#hyqut">HyQuT: Hybrid Q/K Classical, Quantum V</a></li>
+      <li><a href="#qtha">QTHA: Token-based Hybrid Attention</a></li>
+      <li><a href="#comparison">Architecture Comparison</a></li>
+      <li><a href="#bottlenecks">NISQ Bottlenecks &amp; Outlook</a></li>
+    </ol>
+  </div>
+
+  <div class="content-section" id="landscape">
+    <h2>1. Landscape of Quantum Transformers</h2>
+    <p>
+      The Transformer architecture dominates NLP and vision. Its core operation — multi-head self-attention — involves
+      $O(n^2 d)$ complexity for sequence length $n$ and dimension $d$. Quantum approaches aim to reduce this via:
+      (a) quantum amplitude encoding of embeddings, (b) quantum inner product estimation for attention scores,
+      and (c) quantum projection for key/query/value matrices.
+    </p>
+    <div class="callout">
+      <strong>Three strategies:</strong>
+      <br/>· <strong>Full quantum</strong> (Quixer): attention computed via quantum inner product estimation
+      <br/>· <strong>Partial hybrid</strong> (HyQuT): classical attention scores, quantum value projection
+      <br/>· <strong>Token-level hybrid</strong> (QTHA): per-token quantum circuits for compatibility
+    </div>
+  </div>
+
+  <div class="content-section" id="quixer">
+    <h2>2. Quixer: Full Quantum Self-Attention</h2>
+    <p>
+      Quixer (Nguyen et al., 2024) implements a fully quantum self-attention mechanism using QRAM-loaded
+      token embeddings and quantum inner product estimation to compute attention weights.
+    </p>
+
+    <h3>Quantum State Preparation</h3>
+    <p>Token embeddings $\mathbf{x}_1, \ldots, \mathbf{x}_n \in \mathbb{R}^d$ are loaded as quantum states:</p>
+    <div class="math-block">
+      $$|\mathbf{x}_i\rangle = \sum_{j=1}^{d} x_{ij} |j\rangle \quad \text{(amplitude encoding)}$$
+    </div>
+    <div class="math-label">Eq. (1) — Token embeddings as quantum amplitudes</div>
+
+    <h3>Quantum Inner Product for Attention</h3>
+    <p>The attention weight between tokens $i$ and $j$ requires computing $\mathbf{q}_i \cdot \mathbf{k}_j / \sqrt{d}$. Quixer uses the <strong>SWAP test</strong> to estimate this inner product:</p>
+    <div class="math-block">
+      $$\Pr[\text{SWAP test}] = \frac{1 + |\langle \phi_i | \psi_j \rangle|^2}{2}$$
+    </div>
+    <div class="math-label">Eq. (2) — SWAP test for inner product estimation</div>
+
+    <p>More precisely, Quixer uses the <em>Hadamard test</em> with controlled-SWAP to extract signed inner products:</p>
+    <div class="math-block">
+      $$\langle q_i | k_j \rangle = \text{Re}\langle \phi |( H \otimes \text{CSWAP}) |\phi\rangle$$
+    </div>
+    <div class="math-label">Eq. (3) — Signed inner product via Hadamard test</div>
+
+    <h3>Quixer Architecture</h3>
+    <div class="arch-diagram">
+<pre>
+Input tokens: x₁, x₂, ..., xₙ ∈ ℝᵈ
+         │
+         ▼  [QRAM loading — O(log d) depth]
+    |x₁⟩, |x₂⟩, ..., |xₙ⟩  (quantum states)
+         │
+         ▼  [Quantum Q,K,V projection via PQC(θ)]
+    |q₁⟩, |k₁⟩, |v₁⟩, ...   (projected states)
+         │
+         ▼  [Quantum inner product estimation]
+         │    For all pairs (i,j):
+         │    aᵢⱼ = ⟨qᵢ|kⱼ⟩  via Hadamard test
+         │
+         ▼  [Classical softmax — executed on classical CPU]
+         │    αᵢⱼ = softmax(aᵢⱼ / √d)ⱼ
+         │
+         ▼  [Quantum linear combination of |vⱼ⟩ states]
+         │    |outᵢ⟩ = Σⱼ αᵢⱼ |vⱼ⟩    (quantum superposition)
+         │
+         ▼  [Quantum measurement → classical output]
+    outᵢ ∈ ℝᵈ   (attention-weighted embeddings)
+         │
+         ▼  [Classical FFN + residual]
+    Next layer or output
+</pre>
+    </div>
+
+    <h3>Quixer Complexity</h3>
+    <div class="math-block">
+      $$T_{\text{Quixer}} = O\!\left(n^2 \cdot \text{poly}(\log d, 1/\epsilon)\right)$$
+    </div>
+    <div class="math-label">Eq. (4) — Quixer time complexity ($\epsilon$ = inner product estimation error)</div>
+
+    <p>vs. classical: $O(n^2 d)$. Advantage when $d \gg \text{poly}(\log d)$, i.e. for large embedding dimensions — contingent on efficient QRAM and fault-tolerant hardware.</p>
+  </div>
+
+  <div class="content-section" id="hyqut">
+    <h2>3. HyQuT: Hybrid Quantum Transformer</h2>
+    <p>
+      HyQuT (Chen et al., 2024) takes a more conservative hybrid approach: <strong>classical Q and K</strong> matrices
+      (computed via standard linear layers) with <strong>quantum V</strong> (value) projection
+      via a variational quantum circuit (VQC).
+    </p>
+
+    <h3>Motivation</h3>
+    <div class="callout">
+      Attention weights $\alpha_{ij} = \text{softmax}(Q K^\top / \sqrt{d_k})_{ij}$ are sparse and interpretable — classical computation is efficient.
+      The value projection $V = W_V X$ is the dominant computation in large models and benefits most from quantum expressibility.
+    </div>
+
+    <h3>HyQuT Attention</h3>
+    <div class="math-block">
+      \begin{aligned}
+      Q &= W_Q^{\text{class}} X \quad \text{(classical projection)} \\
+      K &= W_K^{\text{class}} X \quad \text{(classical projection)} \\
+      V &= \text{VQC}(\boldsymbol{\theta}_V, X) \quad \text{(quantum value projection)} \\
+      \text{MHA} &= \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V
+      \end{aligned}
+    </div>
+    <div class="math-label">Eq. (5) — HyQuT hybrid attention decomposition</div>
+
+    <h3>VQC for Value Projection</h3>
+    <p>The quantum value projection uses an $\ell$-layer VQC with data re-uploading:</p>
+    <div class="math-block">
+      $$\text{VQC}(\boldsymbol{\theta}, \mathbf{x}) = \langle 0 | U^\dagger(\boldsymbol{\theta}, \mathbf{x})\, O\, U(\boldsymbol{\theta}, \mathbf{x}) | 0 \rangle$$
+    </div>
+    <div class="math-label">Eq. (6) — VQC expectation value as value projection</div>
+
+    <div class="arch-diagram">
+<pre>
+HyQuT Block:
+
+Input X (N×d)
+   │
+   ├──[Classical W_Q]──→  Q (N×d_k)  ─┐
+   ├──[Classical W_K]──→  K (N×d_k)  ─┤─→  softmax(QKᵀ/√d_k) → α (N×N)
+   │                                    │                               │
+   └──[Quantum VQC(θ)]──→ V (N×d_v) ←─┘         α · V → Output       │
+            │                                          ↑                │
+            │  VQC internals:                          └────────────────┘
+            │  |0⟩──[Enc(x)]──[VQC layer 1]──...──[VQC layer ℓ]──[Meas]
+            │  Enc(x): angle encoding xᵢ → Ry(xᵢ) rotations
+            │  VQC layer: Ry(θ) + CNOT entangling
+
+Classical FFN
+   │
+   ▼
+Layer Output
+</pre>
+    </div>
+
+    <h3>Data Re-uploading</h3>
+    <p>HyQuT uses data re-uploading to increase effective circuit depth without increasing qubit count:</p>
+    <div class="math-block">
+      $$U(\boldsymbol{\theta}, \mathbf{x}) = \prod_{\ell=1}^{L} W_\ell(\boldsymbol{\theta}_\ell)\, S(\mathbf{x})$$
+    </div>
+    <div class="math-label">Eq. (7) — Data re-uploading: alternating trainable gates $W_\ell$ and encoding $S(\mathbf{x})$</div>
+    <p>This makes the VQC a universal function approximator on its input domain (Pérez-Salinas et al. 2020).</p>
+  </div>
+
+  <div class="content-section" id="qtha">
+    <h2>4. QTHA: Quantum Token-based Hybrid Attention</h2>
+    <p>
+      QTHA (Quantum Token-based Hybrid Attention) computes <em>per-token</em> quantum circuits
+      to parameterise the compatibility function between queries and keys.
+    </p>
+
+    <h3>Per-token Quantum Compatibility</h3>
+    <p>For token $i$, the quantum circuit $\mathcal{C}_i$ processes the query $\mathbf{q}_i$ and produces a quantum state encoding its "attention signature":</p>
+    <div class="math-block">
+      |\psi_i(\mathbf{q}_i)\rangle = U(\boldsymbol{\theta}_{\text{attn}}, \mathbf{q}_i)|0\rangle
+    </div>
+    <div class="math-label">Eq. (8) — Per-token quantum state for query representation</div>
+
+    <p>Attention weight between token $i$ (query) and $j$ (key):</p>
+    <div class="math-block">
+      $$a_{ij} = \langle \psi_i(\mathbf{q}_i) | M_j | \psi_i(\mathbf{q}_i) \rangle$$
+    </div>
+    <div class="math-label">Eq. (9) — Quantum inner product compatibility (observable $M_j$ depends on $\mathbf{k}_j$)</div>
+
+    <h3>QTHA Architecture</h3>
+    <div class="arch-diagram">
+<pre>
+For each query token i:
+   qᵢ ∈ ℝᵈ
+      │
+      ▼  [Angle encoding]
+   |0⟩──[Ry(q_i1)]──[Ry(q_i2)]──...──[CNOT layers]──[Ry(θ)]──
+                                                              │
+                                              ┌──────────────┘
+                                              │  Quantum state |ψᵢ⟩
+                                              │
+   For each key token j:                      ▼
+   kⱼ ∈ ℝᵈ ──[encode into observable Mⱼ]──  ⟨ψᵢ|Mⱼ|ψᵢ⟩ = aᵢⱼ
+                                              │
+                                              ▼
+                             aᵢⱼ for all j ──→ softmax ──→ αᵢⱼ
+                                                                │
+                             αᵢⱼ · Vⱼ ─────────────────────→ outputᵢ
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="comparison">
+    <h2>5. Architecture Comparison</h2>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:.6rem .8rem;text-align:left;color:var(--muted)">Model</th>
+          <th style="padding:.6rem .8rem;text-align:left;color:var(--muted)">Quantum Components</th>
+          <th style="padding:.6rem 0.8rem;text-align:left;color:var(--muted)">Q Complexity</th>
+          <th style="padding:.6rem .8rem;text-align:left;color:var(--muted)">NISQ Feasibility</th>
+          <th style="padding:.6rem .8rem;text-align:left;color:var(--muted)">Potential Advantage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.6rem .8rem"><strong>Quixer</strong></td>
+          <td style="padding:.6rem .8rem">Full Q attention (QRAM + inner product)</td>
+          <td style="padding:.6rem .8rem;color:var(--green)">$O(n^2 \log d)$</td>
+          <td style="padding:.6rem .8rem;color:var(--red)">Needs QRAM — not yet NISQ</td>
+          <td style="padding:.6rem .8rem">Exponential in $d$</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.6rem .8rem"><strong>HyQuT</strong></td>
+          <td style="padding:.6rem .8rem">Quantum V; Classical Q, K</td>
+          <td style="padding:.6rem .8rem;color:var(--amber)">$O(n \cdot \text{VQC cost})$</td>
+          <td style="padding:.6rem .8rem;color:var(--green)">NISQ compatible</td>
+          <td style="padding:.6rem .8rem">Expressibility of V</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.6rem .8rem"><strong>QTHA</strong></td>
+          <td style="padding:.6rem .8rem">Per-token Q compatibility</td>
+          <td style="padding:.6rem .8rem;color:var(--amber)">$O(n \cdot \text{VQC cost})$</td>
+          <td style="padding:.6rem .8rem;color:var(--green)">NISQ compatible</td>
+          <td style="padding:.6rem .8rem">Attention pattern richness</td>
+        </tr>
+        <tr>
+          <td style="padding:.6rem .8rem"><strong>QViT</strong></td>
+          <td style="padding:.6rem .8rem">Quantum Q, K, V projections (orthogonal)</td>
+          <td style="padding:.6rem .8rem;color:var(--amber)">$O(n^2 \log d)$ circuit</td>
+          <td style="padding:.6rem .8rem;color:var(--green)">NISQ compatible</td>
+          <td style="padding:.6rem .8rem">$O(n)$ parameters</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="content-section" id="bottlenecks">
+    <h2>6. NISQ Bottlenecks &amp; Outlook</h2>
+    <div class="callout callout-warn"><strong>QRAM bottleneck (Quixer):</strong> Efficient QRAM with $O(\log N)$ depth and $O(N)$ qubits is hardware-unproven at scale. Without QRAM, amplitude loading is $O(N)$ depth — eliminating the speedup.</div>
+    <div class="callout callout-warn"><strong>Barren plateaus:</strong> Generic VQC ansätze in HyQuT and QTHA suffer from BP for large qubit counts. Mitigate via ADAPT-VQE-style structured ansätze or Quantum-PEFT.</div>
+    <div class="callout callout-warn"><strong>Measurement overhead:</strong> Extracting all attention weights requires $O(n^2)$ measurement shots — polynomial but large for current hardware shot budgets.</div>
+    <div class="callout callout-warn"><strong>Classical simulation:</strong> Small-scale experiments (up to ~20 qubits) are classically simulable. True quantum advantage only visible at $n \gtrsim 50$ qubits with fault-tolerant gates.</div>
+
+    <div class="highlight-box">
+      <strong>Near-term outlook:</strong> HyQuT and QTHA are the most NISQ-ready — they use small VQCs for value projection and attention compatibility respectively, and can run on 10–20 qubit hardware with acceptable circuit depth. Quixer is a long-term target requiring fault-tolerant QRAM hardware.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="margin-bottom:3rem">
+    <h3 style="margin-bottom:1rem;color:var(--primary-l)">Related Papers</h3>
+    <div class="grid-2" style="gap:.75rem">
+      <a class="card" href="discocat-lambeq.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-nlp">NLP/LLM</span></div>
+        <div style="font-weight:600;margin-top:.4rem">DisCoCat &amp; lambeq</div>
+        <div style="font-size:.82rem;color:var(--muted)">Compositional quantum NLP — categorical semantics</div>
+      </a>
+      <a class="card" href="barren-plateaus-dla.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-theory">Theory</span></div>
+        <div style="font-weight:600;margin-top:.4rem">Barren Plateaus &amp; DLA</div>
+        <div style="font-size:.82rem;color:var(--muted)">Trainability challenge for deep quantum circuits</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p><a href="../index.html">← Back to Quantum AI Hub</a> · Last updated May 2026</p>
+  </div>
+</footer>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

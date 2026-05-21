@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DisCoCat & lambeq — Quantum NLP | Quantum AI Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css"/>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], tags: 'ams' },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">⬡ Quantum<span>AI</span>Hub</a>
+    <div class="nav-links">
+      <a href="../index.html">Papers</a>
+      <a href="qvit-cherrat-2024.html">QViT</a>
+      <a href="barren-plateaus-dla.html">Barren Plateaus</a>
+      <a href="hybrid-transformers.html">Transformers</a>
+      <a href="quddpm.html">Diffusion</a>
+      <a href="hhl-qsvt.html">HHL/QSVT</a>
+      <a href="discocat-lambeq.html" class="active">DisCoCat</a>
+    </div>
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search…" readonly/>
+    </div>
+  </div>
+</nav>
+<div id="search-overlay">
+  <div class="search-box">
+    <input id="search-input" class="search-input" type="text" placeholder="Search papers…"/>
+    <div id="search-results" class="search-results"></div>
+    <div class="search-hint">↵ open · Esc close</div>
+  </div>
+</div>
+
+<div class="container-narrow">
+  <div style="padding-top:2rem">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">/</span>
+      <a href="../index.html#timeline">Papers</a><span class="breadcrumb-sep">/</span>
+      <span>DisCoCat &amp; lambeq</span>
+    </div>
+  </div>
+
+  <div class="paper-page-header">
+    <div class="paper-page-meta">
+      <span class="paper-year">2010–2024</span>
+      <span class="tag tag-nlp">NLP/LLM</span>
+    </div>
+    <h1 class="paper-page-title">DisCoCat &amp; lambeq: Compositional Quantum NLP</h1>
+    <div class="paper-page-authors">Coecke, Sadrzadeh, Clark (DisCoCat, 2010); Kartsaklis, Fan, Yeung et al. (lambeq, 2021)</div>
+    <div class="paper-page-venue">
+      Mathematical Structures in CS (2010) · <a href="https://arxiv.org/abs/1003.4394" target="_blank" style="color:var(--cyan)">arXiv:1003.4394</a>
+      &nbsp;|&nbsp; lambeq: <a href="https://arxiv.org/abs/2110.04236" target="_blank" style="color:var(--cyan)">arXiv:2110.04236</a>
+    </div>
+  </div>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#motivation">Motivation: Grammar as Quantum Structure</a></li>
+      <li><a href="#pregroups">Pregroup Grammars</a></li>
+      <li><a href="#discocat">DisCoCat Framework</a></li>
+      <li><a href="#functor">The Meaning Functor</a></li>
+      <li><a href="#pipeline">lambeq Pipeline</a></li>
+      <li><a href="#circuit-translation">Sentence → Quantum Circuit</a></li>
+      <li><a href="#training">Training &amp; Classification</a></li>
+      <li><a href="#quixer">Connection to Quixer/LLMs</a></li>
+    </ol>
+  </div>
+
+  <div class="content-section" id="motivation">
+    <h2>1. Motivation: Grammar as Quantum Structure</h2>
+    <p>
+      DisCoCat (Distributional Compositional Categorical) is motivated by a profound structural coincidence:
+      the mathematical framework underlying quantum mechanics (monoidal categories with tensor products)
+      is <em>the same</em> framework that describes formal grammar and compositional semantics.
+    </p>
+    <div class="callout">
+      <strong>Key insight:</strong> Sentence meaning can be composed from word meanings using the <em>same tensor calculus</em> as quantum state composition. This makes natural language processing a natural fit for quantum computation.
+    </div>
+    <div class="math-block">
+      \underbrace{\textbf{FVect}}_{\text{Vector spaces}} \cong \underbrace{\textbf{Circ}}_{\text{Quantum circuits}} \supseteq \underbrace{\textbf{FGram}}_{\text{Formal grammars}}
+    </div>
+    <div class="math-label">Eq. (1) — Structural isomorphism: vector semantics, quantum circuits, and grammars share compact closed category structure</div>
+  </div>
+
+  <div class="content-section" id="pregroups">
+    <h2>2. Pregroup Grammars</h2>
+    <p>Pregroup grammar assigns types to words using a type system with left ($l$) and right ($r$) adjoints:</p>
+
+    <div class="arch-diagram">
+<pre>
+Basic types:
+  n  = noun phrase
+  s  = sentence
+  np = noun phrase (same as n in some formulations)
+  p  = prepositional phrase
+
+Word type assignments:
+  "Alice"  : n           (noun)
+  "likes"  : n^r · s · n^l  (transitive verb: takes noun on right and left)
+  "Bob"    : n           (noun)
+  "big"    : n · n^l     (adjective: left-cancels with following noun)
+
+Sentence parsing: "Alice likes Bob"
+  n    (n^r · s · n^l)    n
+  ─────────────────────────
+         (cancellation)
+  n^r · n ⊗ s ⊗ n^l · n
+  1       ⊗ s ⊗ 1
+  = s    ✓ (valid sentence type)
+</pre>
+    </div>
+
+    <p>The type reductions correspond to <em>cups</em> in string diagrams:</p>
+    <div class="math-block">
+      $$\eta_{n^r}: n^r \otimes n \to 1 \qquad \eta_{n^l}: n \otimes n^l \to 1$$
+    </div>
+    <div class="math-label">Eq. (2) — Cup morphisms encoding type cancellation (adjoint elimination)</div>
+  </div>
+
+  <div class="content-section" id="discocat">
+    <h2>3. DisCoCat Framework</h2>
+    <p>DisCoCat translates the grammatical string diagram into a tensor network computation:</p>
+
+    <div class="arch-diagram">
+<pre>
+"Alice likes Bob"  →  String Diagram:
+
+     Alice        likes           Bob
+       │           │ │             │
+       │     ╔═════╧═╧═════╗      │
+       │     ║  cup n^r⊗n  ║      │
+       │     ╚════╤════════╝      │
+       │          │         ╔═════╧═╧═════╗
+       │          │         ║  cup n⊗n^l  ║
+       │          │         ╚═════╤═══════╝
+       │          │               │
+    [A ∈ ℝⁿ] [L ∈ ℝⁿ⊗ᵈ⊗ⁿ]  [B ∈ ℝⁿ]
+                  │
+       ∀i,j: contraction over noun spaces
+                  │
+       Result: s = L(A, B) ∈ ℝᵈ  (sentence meaning vector)
+
+Where:
+  A = meaning vector of "Alice"  ∈ ℝⁿ
+  L = meaning tensor of "likes"  ∈ ℝⁿ ⊗ ℝᵈ ⊗ ℝⁿ
+  B = meaning vector of "Bob"    ∈ ℝⁿ
+  s = L(A, B)  (tensor contraction over noun wires)
+     = Σᵢⱼ Aᵢ Lᵢₖⱼ Bⱼ  (Einstein summation)  ∈ ℝᵈ
+</pre>
+    </div>
+
+    <div class="math-block">
+      $$\llbracket \text{"Alice likes Bob"}\rrbracket = \sum_{i,j} A_i\, L_{ikj}\, B_j \in \mathbb{R}^d$$
+    </div>
+    <div class="math-label">Eq. (3) — DisCoCat compositional meaning: tensor contraction over grammatical connections</div>
+  </div>
+
+  <div class="content-section" id="functor">
+    <h2>4. The Meaning Functor</h2>
+    <p>DisCoCat is formalised as a <em>strong monoidal functor</em> $F$ from the grammar category $\textbf{FGram}$ to the semantics category $\textbf{FVect}$ (or $\textbf{Circ}$):</p>
+
+    <div class="math-block">
+      $$F: \textbf{FGram} \to \textbf{FVect}$$
+    </div>
+    <div class="math-label">Eq. (4) — DisCoCat semantics functor</div>
+
+    <p>The functor maps:</p>
+    <div class="math-block">
+      \begin{aligned}
+      F(n) &= \mathbb{R}^{d_n} \quad \text{(noun space)} \\
+      F(s) &= \mathbb{R}^{d_s} \quad \text{(sentence space)} \\
+      F(n^r \otimes s \otimes n^l) &= \mathbb{R}^{d_n} \otimes \mathbb{R}^{d_s} \otimes \mathbb{R}^{d_n} \quad \text{(verb tensor)} \\
+      F(\eta_{n^r}) &= \sum_i |i\rangle\langle i| \quad \text{(cup = trace)}
+      \end{aligned}
+    </div>
+    <div class="math-label">Eq. (5) — Functor action on types and morphisms</div>
+
+    <h3>Quantum Functor</h3>
+    <p>The key innovation: replace $\textbf{FVect}$ with $\textbf{Circ}$ (the category of quantum circuits):</p>
+    <div class="math-block">
+      $$F_Q: \textbf{FGram} \to \textbf{Circ}$$
+    </div>
+    <div class="math-label">Eq. (6) — Quantum DisCoCat functor: sentence = quantum circuit</div>
+    <div class="math-block">
+      \begin{aligned}
+      F_Q(n) &= \mathbb{C}^{2^{q_n}} \quad \text{($q_n$ qubits for noun)} \\
+      F_Q(\text{word}) &= \text{parameterised quantum circuit on word qubits} \\
+      F_Q(\eta) &= \text{qubit post-selection / Bell measurement}
+      \end{aligned}
+    </div>
+  </div>
+
+  <div class="content-section" id="pipeline">
+    <h2>5. lambeq Pipeline</h2>
+    <p>lambeq (Kartsaklis et al. 2021) is the software library implementing the full DisCoCat-to-circuit pipeline:</p>
+
+    <div class="arch-diagram">
+<pre>
+LAMBEQ PIPELINE
+═══════════════════════════════════════════════════════════════════
+
+Step 1: PARSING
+  Input: "Alice likes Bob"
+  Tool: bobcat parser (CCG/pregroup)
+  Output: Pregroup diagram (string diagram)
+
+Step 2: REWRITE RULES (optional)
+  Input: String diagram
+  Simplifications: curry, remove cups, merge wires
+  Purpose: Reduce circuit size before translation
+  Output: Simplified diagram
+
+Step 3: PARAMETERISATION
+  Input: Simplified diagram
+  Assign: n qubits per noun-type wire
+  Each word → ansatz circuit (IQP, StronglyEntangling, etc.)
+  Output: Parameterised quantum circuit
+
+Step 4: CIRCUIT COMPILATION
+  Input: Abstract circuit
+  Target: Qiskit, PennyLane, pytket
+  Apply: Hardware topology mapping, gate decomposition
+  Output: Hardware-specific circuit
+
+Step 5: TRAINING
+  Input: Labelled sentences
+  Forward: Execute circuits → measure expectation ⟨Z_s⟩
+  Loss: Cross-entropy L = -y log⟨Z_s⟩
+  Gradient: Parameter-shift rule
+  Update: Adam / SPSAOptimiser
+  Output: Trained circuit parameters θ*
+
+Step 6: INFERENCE
+  Input: New sentence
+  Output: ⟨Z_s⟩ → class probabilities → classification
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="circuit-translation">
+    <h2>6. Sentence → Quantum Circuit</h2>
+    <p>Each word in a sentence is mapped to a quantum circuit block. Noun connections (cups) become qubit connections (Bell measurements or post-selection).</p>
+
+    <div class="arch-diagram">
+<pre>
+"Alice likes Bob"  →  Quantum Circuit:
+
+Alice (noun, 1 qubit):
+  |0⟩ ──[Ry(θ_A₁)]──[Rz(θ_A₂)]──●── ... →  noun wire (1 qubit out)
+
+"likes" (transitive verb, 3 qubits: n^r ⊗ s ⊗ n^l):
+  |0⟩ ──[Ry(θ_L₁)]────────────────────── [CNOT]──  → n^r wire
+  |0⟩ ──[Ry(θ_L₂)]──[Ry(θ_L₃)]──[CNOT]──────────  → s wire (output)
+  |0⟩ ──[Ry(θ_L₄)]────────────────────── [CNOT]──  → n^l wire
+
+Bob (noun, 1 qubit):
+  |0⟩ ──[Ry(θ_B₁)]──[Rz(θ_B₂)]──●── ... →  noun wire (1 qubit out)
+
+Cup connections (grammatical contractions):
+  Alice wire ──┬── Bob wire
+  noun wire (from likes n^r) ──(Bell measure)
+  noun wire (from likes n^l) ──(Bell measure)
+
+Sentence wire:
+  s qubit from "likes" → measure Z → ⟨Z_s⟩ ∈ [-1, 1]
+
+Classification:
+  ⟨Z_s⟩ → sigmoid → P(class=1)
+</pre>
+    </div>
+
+    <h3>Circuit Ansätze in lambeq</h3>
+    <div class="grid-2" style="margin:1rem 0">
+      <div class="card" style="padding:1rem">
+        <h4>IQP Ansatz</h4>
+        <p style="font-size:.83rem;color:var(--muted)">Instantaneous Quantum Polynomial: $H^{\otimes n}$ then diagonal gates. Classically hard to simulate. Small circuit depth.</p>
+        <div class="math-block" style="margin:.5rem 0;padding:.5rem">$$U_{\text{IQP}}(\boldsymbol{\theta}) = H^{\otimes n}\, e^{i\sum_k \theta_k Z_k \otimes Z_{k+1}}\, H^{\otimes n}$$</div>
+      </div>
+      <div class="card" style="padding:1rem">
+        <h4>Strongly Entangling Ansatz</h4>
+        <p style="font-size:.83rem;color:var(--muted)">$L$ layers of parameterised single-qubit rotations followed by CNOTs with periodic boundary. High expressibility — prone to barren plateaus for large $n$.</p>
+        <div class="math-block" style="margin:.5rem 0;padding:.5rem">$$U_{\text{SE}}^{(l)} = \prod_j \text{CNOT}_{j,j+1} \prod_j R_j(\theta_j^{(l)})$$</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-section" id="training">
+    <h2>7. Training &amp; Classification</h2>
+    <p>For binary sentence classification (e.g. sentiment analysis):</p>
+    <div class="math-block">
+      $$y_{\text{pred}} = \sigma\!\left(\langle 0|\, U_{\text{sent}}^\dagger(\boldsymbol{\theta})\, Z_s\, U_{\text{sent}}(\boldsymbol{\theta})\, |0\rangle\right)$$
+    </div>
+    <div class="math-label">Eq. (7) — Prediction: expectation value of sentence qubit $Z_s$, passed through sigmoid</div>
+    <div class="math-block">
+      $$\mathcal{L} = -\sum_i \left[y_i \log y_{\text{pred},i} + (1-y_i)\log(1-y_{\text{pred},i})\right]$$
+    </div>
+    <div class="math-label">Eq. (8) — Binary cross-entropy training loss</div>
+
+    <h3>Results (lambeq benchmarks)</h3>
+    <div class="highlight-box">
+      · MC task (MC-TEST): ~84% accuracy (5 qubits/sentence average)<br/>
+      · Relative clause classification: ~90% accuracy<br/>
+      · Sentiment (short sentences): competitive with classical bag-of-words<br/>
+      · Advantage: <em>compositional</em> — meaning computed respecting grammar structure
+    </div>
+  </div>
+
+  <div class="content-section" id="quixer">
+    <h2>8. Connection to Quixer / Quantum LLMs</h2>
+    <p>
+      DisCoCat/lambeq represents the <em>structure-preserving</em> approach to quantum NLP, while
+      Quixer/HyQuT represent the <em>black-box deep learning</em> approach. Key differences:
+    </p>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Approach</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">DisCoCat / lambeq</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Quixer / HyQuT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">Grammar</td>
+          <td style="padding:.5rem .8rem">Explicit (functorial)</td>
+          <td style="padding:.5rem .8rem">Implicit (attention patterns)</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">Compositionality</td>
+          <td style="padding:.5rem .8rem">Exact (categorical)</td>
+          <td style="padding:.5rem .8rem">Emergent</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">Scalability</td>
+          <td style="padding:.5rem .8rem">Limited (circuit per sentence)</td>
+          <td style="padding:.5rem .8rem">Scales with sequence length</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem .8rem">Interpretability</td>
+          <td style="padding:.5rem .8rem">High (grammatical structure visible)</td>
+          <td style="padding:.5rem .8rem">Low (black-box)</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="callout" style="margin-top:1rem">
+      <strong>Open frontier (2025–26):</strong> Bridging DisCoCat's principled compositionality with Quixer's scalability — possibly via categorical quantum LLMs or tensor network-based language models with quantum simulation.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="margin-bottom:3rem">
+    <h3 style="margin-bottom:1rem;color:var(--primary-l)">Related Papers</h3>
+    <div class="grid-2" style="gap:.75rem">
+      <a class="card" href="hybrid-transformers.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-nlp">NLP/LLM</span><span class="tag tag-hybrid">Hybrid Q-C</span></div>
+        <div style="font-weight:600;margin-top:.4rem">Quixer · HyQuT · QTHA</div>
+        <div style="font-size:.82rem;color:var(--muted)">Black-box quantum transformer approach</div>
+      </a>
+      <a class="card" href="hhl-qsvt.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-algo">Algorithms</span></div>
+        <div style="font-weight:600;margin-top:.4rem">HHL &amp; QSVT</div>
+        <div style="font-size:.82rem;color:var(--muted)">Linear algebra foundations for quantum NLP</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p><a href="../index.html">← Back to Quantum AI Hub</a> · Last updated May 2026</p>
+  </div>
+</footer>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

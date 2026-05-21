@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Barren Plateaus via DLA | Quantum AI Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css"/>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], tags: 'ams' },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">⬡ Quantum<span>AI</span>Hub</a>
+    <div class="nav-links">
+      <a href="../index.html">Papers</a>
+      <a href="qvit-cherrat-2024.html">QViT</a>
+      <a href="barren-plateaus-dla.html" class="active">Barren Plateaus</a>
+      <a href="hybrid-transformers.html">Transformers</a>
+      <a href="quddpm.html">Diffusion</a>
+      <a href="hhl-qsvt.html">HHL/QSVT</a>
+      <a href="discocat-lambeq.html">DisCoCat</a>
+    </div>
+    <div class="nav-search" title="Press / to search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" placeholder="Search…" readonly/>
+    </div>
+  </div>
+</nav>
+
+<div id="search-overlay">
+  <div class="search-box">
+    <input id="search-input" class="search-input" type="text" placeholder="Search papers, authors, topics…"/>
+    <div id="search-results" class="search-results"></div>
+    <div class="search-hint">↵ open · Esc close</div>
+  </div>
+</div>
+
+<div class="container-narrow">
+  <div style="padding-top:2rem">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">/</span>
+      <a href="../index.html#timeline">Papers</a><span class="breadcrumb-sep">/</span>
+      <span>Barren Plateaus &amp; DLA Theory</span>
+    </div>
+  </div>
+
+  <div class="paper-page-header">
+    <div class="paper-page-meta">
+      <span class="paper-year">2024–2025</span>
+      <span class="tag tag-theory">Theory</span>
+    </div>
+    <h1 class="paper-page-title">Barren Plateaus via Dynamical Lie Algebras</h1>
+    <div class="paper-page-authors">Ragone, Larocca, Wiersema, Killoran, Cerezo et al.</div>
+    <div class="paper-page-venue">
+      Nature Communications (2024) · Ragone &amp; Larocca <a href="https://arxiv.org/abs/2309.09342" target="_blank" style="color:var(--cyan)">arXiv:2309.09342</a>
+      <br/>Cerezo et al. (2025) — <a href="https://arxiv.org/abs/2310.06012" target="_blank" style="color:var(--cyan)">arXiv:2310.06012</a>
+    </div>
+  </div>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#intro">What are Barren Plateaus?</a></li>
+      <li><a href="#formal">Formal Definition</a></li>
+      <li><a href="#dla">Dynamical Lie Algebras</a></li>
+      <li><a href="#theorem">Main Theorem: DLA &amp; Variance Bound</a></li>
+      <li><a href="#architecture">Architecture Diagram</a></li>
+      <li><a href="#types">Types of Barren Plateaus</a></li>
+      <li><a href="#mitigation">Mitigation Strategies</a></li>
+      <li><a href="#expressibility">Expressibility-Trainability Tradeoff</a></li>
+      <li><a href="#open">Open Questions</a></li>
+    </ol>
+  </div>
+
+  <div class="content-section" id="intro">
+    <h2>1. What are Barren Plateaus?</h2>
+    <p>
+      Barren plateaus (BP) are regions of the parameter landscape of parameterised quantum circuits (PQCs) where the gradient of the cost function vanishes exponentially with system size $n$. Concretely, the gradient norm is exponentially small almost everywhere, making gradient-based optimisation of PQCs intractable for large $n$.
+    </p>
+    <div class="callout">
+      <strong>Practical consequence:</strong> On an $n$-qubit circuit, the gradient magnitude is $O(2^{-n})$, meaning you need $O(2^{2n})$ measurements just to resolve the sign of the gradient — exponentially more than what any classical or quantum device can provide efficiently.
+    </div>
+    <p>
+      Originally discovered by McClean et al. (2018) for random circuits, barren plateaus have been shown to afflict:
+      global cost functions, deep circuits, hardware-efficient ansätze, quantum kernel methods, and even some problem-inspired ansätze.
+      The DLA framework provides a <em>unified theory</em> of why they occur.
+    </p>
+  </div>
+
+  <div class="content-section" id="formal">
+    <h2>2. Formal Definition</h2>
+    <p>Consider a PQC $U(\boldsymbol{\theta}) = \prod_k e^{-i\theta_k H_k}$ and cost function:</p>
+    <div class="math-block">
+      $$\mathcal{L}(\boldsymbol{\theta}) = \langle \psi_0 | U^\dagger(\boldsymbol{\theta})\, O\, U(\boldsymbol{\theta}) | \psi_0 \rangle$$
+    </div>
+    <div class="math-label">Eq. (1) — Variational cost function for observable $O$</div>
+
+    <p>The gradient with respect to parameter $\theta_\mu$ is:</p>
+    <div class="math-block">
+      $$\partial_\mu \mathcal{L} = -i\langle \psi_0 | U^\dagger [H_\mu,\, U_\mu^\dagger O\, U_\mu] U | \psi_0 \rangle$$
+    </div>
+    <div class="math-label">Eq. (2) — Gradient via commutator (parameter-shift derivation)</div>
+
+    <p><strong>Barren plateau definition:</strong> A PQC exhibits a barren plateau if:</p>
+    <div class="math-block">
+      $$\text{Var}_{\boldsymbol{\theta}}\!\left[\partial_\mu \mathcal{L}(\boldsymbol{\theta})\right] \in O\!\left(\frac{1}{2^n}\right)$$
+    </div>
+    <div class="math-label">Eq. (3) — Variance decays exponentially in the number of qubits $n$</div>
+
+    <p>By Chebyshev's inequality, this means $|\partial_\mu \mathcal{L}|$ is exponentially small with high probability:</p>
+    <div class="math-block">
+      $$\Pr\!\left[|\partial_\mu \mathcal{L}| \geq \epsilon\right] \leq \frac{\text{Var}[\partial_\mu \mathcal{L}]}{\epsilon^2} \in O\!\left(\frac{1}{\epsilon^2 \cdot 2^n}\right)$$
+    </div>
+    <div class="math-label">Eq. (4) — Probability of large gradient vanishes exponentially</div>
+  </div>
+
+  <div class="content-section" id="dla">
+    <h2>3. Dynamical Lie Algebras</h2>
+    <p>
+      The <strong>Dynamical Lie Algebra (DLA)</strong> $\mathfrak{g}$ of a PQC is the Lie algebra generated by the
+      circuit's generators $\{iH_k\}$ under the commutator:
+    </p>
+    <div class="math-block">
+      $$\mathfrak{g} = \text{Lie}\!\left(\{iH_k\}_{k=1}^{K}\right) = \text{span}\!\left\{[iH_j, iH_k],\, [[iH_j, iH_k], iH_l],\, \ldots\right\}$$
+    </div>
+    <div class="math-label">Eq. (5) — DLA as iterated commutator closure of generators</div>
+
+    <p>The DLA determines the <strong>reachable set</strong> of the circuit:</p>
+    <div class="math-block">
+      $$\mathcal{M} = \{e^A \mid A \in \mathfrak{g}\} \subseteq SU(2^n)$$
+    </div>
+    <div class="math-label">Eq. (6) — Reachable manifold (Lie group corresponding to DLA)</div>
+
+    <h3>DLA Dimension as the Key Quantity</h3>
+    <p>
+      The dimension $|\mathfrak{g}| = \dim(\mathfrak{g})$ is the central quantity:
+    </p>
+    <div style="overflow-x:auto;margin:1rem 0">
+    <table style="width:100%;border-collapse:collapse;font-size:.87rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Circuit type</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">$\dim(\mathfrak{g})$</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Barren plateau?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">Generic (hardware-efficient) random PQC</td>
+          <td style="padding:.5rem .8rem;color:var(--red)">$\Theta(4^n)$ — full $\mathfrak{su}(2^n)$</td>
+          <td style="padding:.5rem .8rem;color:var(--red)">✓ Yes — exponential BP</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">Quantum Alternating Operator Ansatz (QAOA)</td>
+          <td style="padding:.5rem .8rem;color:var(--amber)">Polynomial in $n$ (problem-dependent)</td>
+          <td style="padding:.5rem .8rem;color:var(--amber)">Partial — shallow QAOA OK</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">ADAPT-VQE (chemistry-inspired)</td>
+          <td style="padding:.5rem .8rem;color:var(--amber)">$O(n^2)$ to $O(n^4)$</td>
+          <td style="padding:.5rem .8rem;color:var(--green)">Mitigated — polynomial DLA</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem .8rem">Matchgate / free-fermion circuits</td>
+          <td style="padding:.5rem .8rem;color:var(--green)">$O(n^2)$ (quadratic)</td>
+          <td style="padding:.5rem .8rem;color:var(--green)">✓ No BP — classically simulable</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="content-section" id="theorem">
+    <h2>4. Main Theorem: DLA &amp; Variance Bound</h2>
+    <div class="highlight-box">
+      <strong>Theorem (Ragone-Larocca 2024):</strong><br/>
+      Let $U(\boldsymbol{\theta})$ be a PQC with DLA $\mathfrak{g}$. For a traceless observable $O$ and random parameter initialisation:
+      $$\text{Var}_{\boldsymbol{\theta}}\!\left[\partial_\mu \mathcal{L}\right] \leq \frac{\|O\|_F^2 \cdot \|H_\mu\|_F^2}{|\mathfrak{g}|}$$
+      where $|\mathfrak{g}| = \dim(\mathfrak{g})$ and $\|\cdot\|_F$ is the Frobenius norm.
+    </div>
+    <div class="math-block">
+      $$\boxed{\text{Var}_{\boldsymbol{\theta}}\!\left[\partial_\mu \mathcal{L}\right] \leq \frac{C}{|\mathfrak{g}|}}$$
+    </div>
+    <div class="math-label">Eq. (7) — DLA variance upper bound (constant $C$ depends on $O$ and $H_\mu$ norms)</div>
+
+    <p>Since generic $n$-qubit circuits have $|\mathfrak{g}| = \dim(\mathfrak{su}(2^n)) = 4^n - 1$:</p>
+    <div class="math-block">
+      $$\text{Var}_{\boldsymbol{\theta}}\!\left[\partial_\mu \mathcal{L}\right] \leq \frac{C}{4^n - 1} \in O(4^{-n})$$
+    </div>
+    <div class="math-label">Eq. (8) — Exponential gradient suppression for generic PQCs</div>
+
+    <div class="callout">
+      <strong>Corollary:</strong> A PQC avoids barren plateaus if and only if $|\mathfrak{g}| \in O(\text{poly}(n))$.
+      This provides an <em>algebraic diagnostic</em>: compute the DLA dimension to check trainability.
+    </div>
+
+    <h3>Tightness</h3>
+    <p>The bound is tight for 2-designs (unitaries drawn from circuits that form approximate unitary 2-designs), where equality holds up to constants. For structured circuits (QAOA, ADAPT-VQE), the bound is not always tight.</p>
+    <div class="math-block">
+      $$\text{Var}_{\boldsymbol{\theta}}\!\left[\partial_\mu \mathcal{L}\right] = \frac{\|[H_\mu, O]\|_F^2}{|\mathfrak{g}|(|\mathfrak{g}|+1)} \quad \text{(exact, for 2-designs)}$$
+    </div>
+    <div class="math-label">Eq. (9) — Exact variance for 2-design circuits (Cerezo et al. 2025)</div>
+  </div>
+
+  <div class="content-section" id="architecture">
+    <h2>5. Landscape Architecture Diagram</h2>
+    <div class="arch-diagram">
+<pre>
+PARAMETER SPACE  θ ∈ ℝᵏ
+──────────────────────────────────────────────────────────
+
+Large DLA (generic PQC):         Small DLA (structured PQC):
+
+  ℒ(θ)                            ℒ(θ)
+   │                               │
+   │   "flat desert"               │    has structure!
+   │ ~~~~~~~~~~~~~~~~              │  /\
+   │ ~~~~~~~~~~~~~~~~              │ /  \    /\
+   │ ~~~~~~~~~~~~~~~~              │/    \  /  \
+   │ ~~~~~~~~~~~~~~~~              │      \/    \___
+   └──────────────── θ             └────────────────── θ
+
+  |𝔤| = O(4ⁿ)                     |𝔤| = O(poly(n))
+  Var[∂ₘℒ] ~ 1/4ⁿ ≈ 0             Var[∂ₘℒ] ~ 1/poly(n)
+
+  Training: IMPOSSIBLE             Training: FEASIBLE
+  (exponential shots to see       (polynomial shots to
+   nonzero gradient)               resolve gradient)
+
+MECHANISM:
+  PQC generators {iHₖ} ─→ generate ─→ 𝔤 = Lie({iHₖ})
+                                         │
+                          large 𝔤: circuit forms 2-design
+                          → cost landscape is nearly flat
+                          → quantum concentration of measure
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="types">
+    <h2>6. Types of Barren Plateaus</h2>
+    <div class="grid-2" style="margin-bottom:1rem">
+      <div class="card" style="border-left:3px solid var(--red)">
+        <h4 style="color:var(--red);margin-bottom:.5rem">Expressibility-induced BP</h4>
+        <p style="font-size:.87rem;color:var(--muted)">From large DLA — generic hardware-efficient circuits. Gradient $\sim 2^{-n}$. Primary focus of DLA theory.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--amber)">
+        <h4 style="color:var(--amber);margin-bottom:.5rem">Global cost BP</h4>
+        <p style="font-size:.87rem;color:var(--muted)">Observable $O$ acts on all qubits globally. Even structured circuits exhibit BP with global cost. Fix: use local cost functions.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--primary)">
+        <h4 style="color:var(--primary-l);margin-bottom:.5rem">Noise-induced BP</h4>
+        <p style="font-size:.87rem;color:var(--muted)">Deep circuits on noisy hardware: depolarising noise exponentially suppresses the signal part of the cost. Gradient noise ratio $\sim e^{-\gamma L}$ for depth $L$.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--cyan)">
+        <h4 style="color:var(--cyan);margin-bottom:.5rem">Entanglement-induced BP</h4>
+        <p style="font-size:.87rem;color:var(--muted)">Highly entangled reference states $|\psi_0\rangle$ suppress gradients. Even shallow circuits exhibit BP if the initial state is highly entangled.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-section" id="mitigation">
+    <h2>7. Mitigation Strategies</h2>
+
+    <h3>1. Problem-Inspired (Structured) Ansätze</h3>
+    <div class="callout">
+      Choose $\{H_k\}$ from the problem's symmetry group. Example: for molecular simulation, use Fermionic operators — the DLA is $\mathfrak{su}(n/2)^2$ with $|\mathfrak{g}| = O(n^2)$, polynomial.
+    </div>
+    <div class="math-block">
+      $$|\mathfrak{g}| \in O(\text{poly}(n)) \implies \text{Var}[\partial_\mu \mathcal{L}] \in \Omega\!\left(\frac{1}{\text{poly}(n)}\right)$$
+    </div>
+
+    <h3>2. Layer-wise Pre-training</h3>
+    <p>Train circuit blocks sequentially (depth $L=1$ first, then extend). Each block has small DLA $\implies$ gradient is non-vanishing. Concatenate trained blocks.</p>
+
+    <h3>3. Local Cost Functions</h3>
+    <div class="math-block">
+      $$\mathcal{L}_{\text{local}} = \sum_{j=1}^{n} \langle O_j \rangle \quad \text{vs.} \quad \mathcal{L}_{\text{global}} = \langle O_1 \otimes \cdots \otimes O_n \rangle$$
+    </div>
+    <p>Local cost functions have at most polynomial barren plateaus (gradient $\sim n^{-1}$) compared to exponential for global cost.</p>
+
+    <h3>4. Quantum Natural Gradient (QNG)</h3>
+    <div class="math-block">
+      $$\boldsymbol{\theta}_{t+1} = \boldsymbol{\theta}_t - \eta\, F^+(\boldsymbol{\theta}_t)\,\nabla_{\boldsymbol{\theta}} \mathcal{L}$$
+    </div>
+    <p>Uses the quantum Fisher information matrix $F$ (Fubini-Study metric) as preconditioner. Does not eliminate BP but accelerates convergence when gradients are non-zero.</p>
+
+    <h3>5. ADAPT-VQE / Greedy Construction</h3>
+    <p>Select the next generator $H_k$ with the largest gradient magnitude. Ensures the active DLA dimension grows slowly, keeping gradients tractable throughout training.</p>
+
+    <h3>6. Quantum-PEFT</h3>
+    <p>LoRA-style reparameterisation: restrict to a low-rank subspace of parameter space. Equivalent to constraining the DLA to a polynomial-dimension subalgebra.</p>
+  </div>
+
+  <div class="content-section" id="expressibility">
+    <h2>8. Expressibility–Trainability Tradeoff</h2>
+    <div class="math-block">
+      \begin{aligned}
+      &\text{Expressibility: } \mathcal{E} \propto |\mathfrak{g}| \\[6pt]
+      &\text{Trainability: } \mathcal{T} \propto \frac{1}{|\mathfrak{g}|} \\[6pt]
+      &\implies \mathcal{E} \cdot \mathcal{T} = O(1)
+      \end{aligned}
+    </div>
+    <div class="math-label">Eq. (10) — Fundamental expressibility–trainability tradeoff</div>
+
+    <div class="arch-diagram">
+<pre>
+Trainability
+ ↑
+ │  ADAPT-VQE  ★
+ │  QAOA (shallow)  ★
+ │  Matchgates  ★
+ │
+ │              ★  Chemistry-inspired
+ │
+ │                              ★  Hardware-efficient (shallow)
+ │
+ │                                    ★  Hardware-efficient (deep)
+ └────────────────────────────────────────────────→ Expressibility
+                                          (full SU(2ⁿ))
+
+Goal: design circuits in the "Goldilocks zone" — enough expressibility
+to approximate the target state, small enough DLA to be trainable.
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="open">
+    <h2>9. Open Questions</h2>
+    <div class="callout callout-warn"><strong>Q1:</strong> Can we efficiently compute $\dim(\mathfrak{g})$ for a given PQC? (Currently requires exponential-time symbolic computation for generic circuits.)</div>
+    <div class="callout callout-warn"><strong>Q2:</strong> What is the tight lower bound on gradient variance? The current bound from DLA is an upper bound — tightness for non-2-design circuits is open.</div>
+    <div class="callout callout-warn"><strong>Q3:</strong> Do classical ML techniques (e.g. skip connections, batch norm) have quantum analogues that alleviate BP?</div>
+    <div class="callout callout-warn"><strong>Q4:</strong> How does noise-induced BP interact with expressibility-induced BP? Worst case: both active simultaneously.</div>
+    <div class="highlight-box" style="margin-top:1rem">
+      <strong>Research frontier (2025–26):</strong> Cerezo et al.'s 2025 work establishes exact formulas for variance in terms of DLA representation theory. Current open problem: extending the DLA analysis to <em>non-unitary</em> quantum channels (noisy circuits) and <em>mid-circuit measurement</em> settings.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="margin-bottom:3rem">
+    <h3 style="margin-bottom:1rem;color:var(--primary-l)">Related Papers</h3>
+    <div class="grid-2" style="gap:.75rem">
+      <a class="card" href="qvit-cherrat-2024.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-vision">Vision</span></div>
+        <div style="font-weight:600;margin-top:.4rem">QViT — Quantum Vision Transformers</div>
+        <div style="font-size:.82rem;color:var(--muted)">Avoids BP via orthogonal (RBS) layers</div>
+      </a>
+      <a class="card" href="hybrid-transformers.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-nlp">NLP/LLM</span></div>
+        <div style="font-weight:600;margin-top:.4rem">Quixer, HyQuT, QTHA</div>
+        <div style="font-size:.82rem;color:var(--muted)">Hybrid transformers navigating the BP landscape</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p><a href="../index.html">← Back to Quantum AI Hub</a> · Last updated May 2026</p>
+  </div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

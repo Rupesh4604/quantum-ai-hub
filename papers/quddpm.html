@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuDDPM · MSQuDDPM — Quantum Diffusion | Quantum AI Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css"/>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], tags: 'ams' },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">⬡ Quantum<span>AI</span>Hub</a>
+    <div class="nav-links">
+      <a href="../index.html">Papers</a>
+      <a href="qvit-cherrat-2024.html">QViT</a>
+      <a href="barren-plateaus-dla.html">Barren Plateaus</a>
+      <a href="hybrid-transformers.html">Transformers</a>
+      <a href="quddpm.html" class="active">Diffusion</a>
+      <a href="hhl-qsvt.html">HHL/QSVT</a>
+      <a href="discocat-lambeq.html">DisCoCat</a>
+    </div>
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search…" readonly/>
+    </div>
+  </div>
+</nav>
+<div id="search-overlay">
+  <div class="search-box">
+    <input id="search-input" class="search-input" type="text" placeholder="Search papers…"/>
+    <div id="search-results" class="search-results"></div>
+    <div class="search-hint">↵ open · Esc close</div>
+  </div>
+</div>
+
+<div class="container-narrow">
+  <div style="padding-top:2rem">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">/</span>
+      <a href="../index.html#timeline">Papers</a><span class="breadcrumb-sep">/</span>
+      <span>Quantum Diffusion Models</span>
+    </div>
+  </div>
+
+  <div class="paper-page-header">
+    <div class="paper-page-meta">
+      <span class="paper-year">2024</span>
+      <span class="tag tag-gen">Generative</span>
+      <span class="tag tag-hybrid">Hybrid Q-C</span>
+    </div>
+    <h1 class="paper-page-title">QuDDPM &amp; MSQuDDPM: Quantum Denoising Diffusion</h1>
+    <div class="paper-page-authors">Cacioppo, Bordoni, Vallecorsa et al. (QuDDPM, 2024)</div>
+    <div class="paper-page-venue"><a href="https://arxiv.org/abs/2401.07049" target="_blank" style="color:var(--cyan)">arXiv:2401.07049</a></div>
+  </div>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#classical-ddpm">Classical DDPM Background</a></li>
+      <li><a href="#quantum-forward">Quantum Forward Process</a></li>
+      <li><a href="#quantum-reverse">Quantum Reverse Process (Score Network)</a></li>
+      <li><a href="#elbo">Training Objective: ELBO</a></li>
+      <li><a href="#architecture">Architecture Diagram</a></li>
+      <li><a href="#msquddpm">MSQuDDPM: Multi-Scale Extension</a></li>
+      <li><a href="#hardware">Hardware Considerations</a></li>
+    </ol>
+  </div>
+
+  <div class="content-section" id="classical-ddpm">
+    <h2>1. Classical DDPM Background</h2>
+    <p>Denoising Diffusion Probabilistic Models (Ho et al. 2020) learn to generate data by reversing a fixed Markov chain that gradually adds Gaussian noise to data.</p>
+
+    <h3>Forward Process</h3>
+    <div class="math-block">
+      $$q(\mathbf{x}_t | \mathbf{x}_{t-1}) = \mathcal{N}\!\left(\mathbf{x}_t;\, \sqrt{1-\beta_t}\,\mathbf{x}_{t-1},\, \beta_t \mathbf{I}\right)$$
+    </div>
+    <div class="math-label">Eq. (1) — Forward process: Gaussian noise addition at step $t$</div>
+
+    <p>Using the reparameterisation $\bar{\alpha}_t = \prod_{s=1}^{t}(1-\beta_s)$, sampling at any step $t$ directly:</p>
+    <div class="math-block">
+      $$q(\mathbf{x}_t | \mathbf{x}_0) = \mathcal{N}\!\left(\mathbf{x}_t;\, \sqrt{\bar{\alpha}_t}\,\mathbf{x}_0,\, (1-\bar{\alpha}_t)\mathbf{I}\right)$$
+    </div>
+    <div class="math-label">Eq. (2) — Marginal forward distribution (closed form)</div>
+
+    <h3>Reverse Process</h3>
+    <div class="math-block">
+      $$p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t) = \mathcal{N}\!\left(\mathbf{x}_{t-1};\, \mu_\theta(\mathbf{x}_t, t),\, \sigma_t^2 \mathbf{I}\right)$$
+    </div>
+    <div class="math-label">Eq. (3) — Reverse process parameterised by neural network $\mu_\theta$</div>
+  </div>
+
+  <div class="content-section" id="quantum-forward">
+    <h2>2. Quantum Forward Process</h2>
+    <p>
+      QuDDPM replaces the classical Gaussian noise addition with a <em>quantum channel</em>.
+      The natural quantum analogue of Gaussian noise is the <strong>depolarising channel</strong>:
+    </p>
+    <div class="math-block">
+      $$\mathcal{E}_t(\rho) = (1-p_t)\rho + p_t \cdot \frac{\mathbf{I}}{2^n}$$
+    </div>
+    <div class="math-label">Eq. (4) — Depolarising channel: mixes state $\rho$ toward maximally mixed state $\mathbf{I}/2^n$</div>
+
+    <p>For the full $T$-step forward process:</p>
+    <div class="math-block">
+      $$\rho_t = \bar{p}_t \cdot \rho_0 + (1-\bar{p}_t) \cdot \frac{\mathbf{I}}{2^n}$$
+    </div>
+    <div class="math-label">Eq. (5) — Marginal quantum forward process; $\bar{p}_t = \prod_{s=1}^t(1-p_s)$</div>
+
+    <p>At $t=T$, $\bar{p}_T \approx 0$, so $\rho_T \approx \mathbf{I}/2^n$ — the maximally mixed (quantum "noise") state.</p>
+
+    <div class="callout">
+      <strong>Key insight:</strong> Decoherence is quantum hardware's natural noise process. QuDDPM proposes that the quantum device's <em>inherent decoherence</em> implements the forward process for free — no explicit noise injection needed.
+    </div>
+  </div>
+
+  <div class="content-section" id="quantum-reverse">
+    <h2>3. Quantum Reverse Process (Score Network)</h2>
+    <p>The classical score network (U-Net) $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)$ is replaced by a <strong>parameterised quantum circuit (PQC)</strong> that takes the noisy quantum state $\rho_t$ and outputs a denoising direction.</p>
+
+    <h3>Quantum Score Network</h3>
+    <div class="math-block">
+      $$\hat{\boldsymbol{\epsilon}}_{\boldsymbol{\theta}}(\rho_t, t) = \left\langle O_j \right\rangle_{\rho_t^{\prime}} = \text{Tr}\!\left[O_j\, U_t(\boldsymbol{\theta})\,\rho_t\, U_t^\dagger(\boldsymbol{\theta})\right]_{j=1}^{d}$$
+    </div>
+    <div class="math-label">Eq. (6) — Quantum score: expectation values of observables $O_j$ on processed state</div>
+
+    <p>The reverse step denoises using the predicted noise:</p>
+    <div class="math-block">
+      $$\mathbf{x}_{t-1} = \frac{1}{\sqrt{\alpha_t}}\!\left(\mathbf{x}_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\,\hat{\boldsymbol{\epsilon}}_{\boldsymbol{\theta}}(\mathbf{x}_t, t)\right) + \sigma_t \mathbf{z}$$
+    </div>
+    <div class="math-label">Eq. (7) — DDPM reverse sampling step ($\mathbf{z} \sim \mathcal{N}(0,\mathbf{I})$)</div>
+
+    <h3>Parameterised Quantum Circuit for Denoising</h3>
+    <div class="arch-diagram">
+<pre>
+Input: noisy state ρ_t (quantum or classically encoded)
+       │
+       ▼  [Time embedding: t → angle shift]
+ Encode timestep t into rotation angles: φ(t) ∈ ℝᵐ
+       │
+       ▼  [Data encoding layer]
+ |0⟩──[Ry(x_t1)]──[Ry(x_t2)]──...──[Ry(x_tn)]
+       │
+       ▼  [L variational layers (data re-uploading)]
+ ─────[Ry(θ₁+φ(t))]──[CNOT]──[Ry(θ₂+φ(t))]──[CNOT]──...
+                         │
+       (entangling + parameterised rotations, t-conditioned)
+                         │
+       ▼  [Measurement: expectation values of Pauli operators]
+ ε̂ = (⟨Z₁⟩, ⟨Z₂⟩, ..., ⟨Zₙ⟩, ⟨Z₁Z₂⟩, ...)  ∈ ℝᵈ
+       │
+       ▼  [Classical post-processing: reverse step formula]
+ x_{t-1} = (x_t - coeff × ε̂) / √α_t  +  σ_t z
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="elbo">
+    <h2>4. Training Objective: Quantum ELBO</h2>
+    <p>The classical DDPM training simplifies the ELBO to a denoising score matching objective:</p>
+    <div class="math-block">
+      $$\mathcal{L}_{\text{simple}} = \mathbb{E}_{t, \mathbf{x}_0, \boldsymbol{\epsilon}}\!\left[\left\|\boldsymbol{\epsilon} - \hat{\boldsymbol{\epsilon}}_{\boldsymbol{\theta}}(\mathbf{x}_t, t)\right\|^2\right]$$
+    </div>
+    <div class="math-label">Eq. (8) — Simple denoising objective (Ho et al. 2020)</div>
+
+    <p>For the quantum version, gradients are computed via the parameter-shift rule:</p>
+    <div class="math-block">
+      $$\frac{\partial \mathcal{L}}{\partial \theta_k} = \frac{1}{2}\!\left[\mathcal{L}\!\left(\theta_k + \frac{\pi}{2}\right) - \mathcal{L}\!\left(\theta_k - \frac{\pi}{2}\right)\right]$$
+    </div>
+    <div class="math-label">Eq. (9) — Quantum parameter-shift rule for gradient computation</div>
+
+    <div class="callout callout-warn">
+      <strong>Training challenge:</strong> Each gradient evaluation requires $2K$ circuit executions (where $K$ = number of parameters). For a batch of $B$ samples and $T$ timesteps, total shots per update: $O(B \cdot T \cdot K / \epsilon^2)$ — shot-intensive on current hardware.
+    </div>
+  </div>
+
+  <div class="content-section" id="architecture">
+    <h2>5. Full QuDDPM Architecture</h2>
+    <div class="arch-diagram">
+<pre>
+TRAINING                          GENERATION
+════════                          ══════════
+
+Real data x₀                     Sample xᵀ ~ N(0, I)
+     │                                 │
+     │ Forward process (fixed)         │ Reverse process (learned)
+     │                                 │
+     ▼                                 ▼
+  t ~ Uniform[1,T]             For t = T, T-1, ..., 1:
+     │                           │
+     ▼                           ▼
+  ε ~ N(0, I)               [Quantum Score Network]
+     │                       VQC(θ, x_t, t) → ε̂_θ(x_t, t)
+     ▼                           │
+  x_t = √ᾱ_t x₀ + √(1-ᾱ_t)ε   ▼
+     │                      x_{t-1} = (x_t - coeff·ε̂)/√α_t + σ_t·z
+     │                           │
+     ▼                           ▼
+  ε̂ = VQC(θ, x_t, t)       x₀ ≈ x_0  (generated sample)
+     │
+     ▼
+  Loss: ||ε - ε̂||²
+     │
+     ▼
+  Update θ via parameter-shift
+     gradient + Adam/SPSA
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  VQC ARCHITECTURE (Score Network)                                    │
+│                                                                      │
+│  n qubits: ─[Enc(x_t)]─┬──[L₁(θ,t)]──[Ent]──[L₂(θ,t)]──[Meas]─   │
+│                         │                                            │
+│  Time conditioning:  φ(t) = [sin(t/T), cos(t/T), sin(2t/T), ...]   │
+│  Rotation: Rᵧ(θₖ + φ(t)ₖ) — learnable + time-shifted               │
+│  Entangling: linear CNOT chain or all-to-all (hardware dependent)   │
+│  Output: ⟨Zⱼ⟩ for j=1..n → score vector ε̂ ∈ ℝⁿ                   │
+└─────────────────────────────────────────────────────────────────────┘
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="msquddpm">
+    <h2>6. MSQuDDPM: Multi-Scale Extension</h2>
+    <p>
+      MSQuDDPM extends QuDDPM with a multi-resolution diffusion process, addressing the challenge that
+      small qubit counts limit the dimensionality of the generated signal.
+    </p>
+
+    <h3>Multi-Scale Decomposition</h3>
+    <div class="math-block">
+      $$\mathbf{x} = \sum_{s=1}^{S} \mathbf{x}^{(s)}, \quad \mathbf{x}^{(s)} = \mathcal{P}_s(\mathbf{x})$$
+    </div>
+    <div class="math-label">Eq. (10) — Multi-scale decomposition into $S$ resolution levels via projection $\mathcal{P}_s$</div>
+
+    <p>Each scale $s$ gets its own VQC diffusion model:</p>
+    <div class="math-block">
+      $$\hat{\boldsymbol{\epsilon}}_{\boldsymbol{\theta}}^{(s)}(\mathbf{x}_t^{(s)}, t)$$
+    </div>
+    <div class="math-label">Eq. (11) — Per-scale quantum score network</div>
+
+    <div class="arch-diagram">
+<pre>
+MSQuDDPM Hierarchy:
+
+Scale 1 (coarse, few qubits):
+  x⁽¹⁾ = Proj₁(x)  →  VQC₁(θ₁)  →  ε̂⁽¹⁾
+         ↕ condition
+Scale 2 (medium):
+  x⁽²⁾ = Proj₂(x)  →  VQC₂(θ₂, x⁽¹⁾)  →  ε̂⁽²⁾
+         ↕ condition
+Scale 3 (fine):
+  x⁽³⁾ = Proj₃(x)  →  VQC₃(θ₃, x⁽¹⁾, x⁽²⁾)  →  ε̂⁽³⁾
+
+Generation: sample coarse scale first, condition finer scales
+on coarse outputs → coarse-to-fine generation.
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="hardware">
+    <h2>7. Hardware Considerations</h2>
+    <div class="grid-2">
+      <div class="card" style="border-left:3px solid var(--green)">
+        <h4 style="color:var(--green);margin-bottom:.5rem">✓ Advantages</h4>
+        <p style="font-size:.85rem;color:var(--muted)">Decoherence = free forward process on quantum hardware. Shot-efficient for low-dimensional data. VQC is shallow (compatible with NISQ).</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--red)">
+        <h4 style="color:var(--red);margin-bottom:.5rem">✗ Challenges</h4>
+        <p style="font-size:.85rem;color:var(--muted)">Limited qubit count restricts data dimensionality. $O(2K)$ shots per gradient step is expensive. Readout noise adds variance to score estimate.</p>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:1rem">
+      <strong>Near-term target:</strong> QuDDPM demonstrated on low-dimensional scientific data (particle physics, financial time series) where $n \leq 12$ qubits suffice. Extension to high-dimensional image generation requires fault-tolerant hardware and QRAM.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="margin-bottom:3rem">
+    <h3 style="margin-bottom:1rem;color:var(--primary-l)">Related Papers</h3>
+    <div class="grid-2" style="gap:.75rem">
+      <a class="card" href="qvit-cherrat-2024.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-vision">Vision</span></div>
+        <div style="font-weight:600;margin-top:.4rem">QViT — Quantum Vision Transformers</div>
+        <div style="font-size:.82rem;color:var(--muted)">Quantum generative meets quantum discriminative</div>
+      </a>
+      <a class="card" href="barren-plateaus-dla.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-theory">Theory</span></div>
+        <div style="font-weight:600;margin-top:.4rem">Barren Plateaus &amp; DLA</div>
+        <div style="font-size:.82rem;color:var(--muted)">Why training the VQC score network is hard</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p><a href="../index.html">← Back to Quantum AI Hub</a> · Last updated May 2026</p>
+  </div>
+</footer>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

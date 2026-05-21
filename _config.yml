@@ -1,0 +1,23 @@
+title: "Quantum AI Hub"
+description: "Curated tracker of Quantum ML, Quantum NLP, Quantum Vision, and Hybrid Quantum-Classical research"
+baseurl: "/quantum-ai-hub"
+url: "https://rupesh-iitb.github.io"
+
+author:
+  name: Rupesh
+  email: 24m0319@iitb.ac.in
+  institution: IIT Bombay
+
+# Since we're using plain HTML (not Jekyll templates), disable Jekyll processing
+# GitHub Pages will serve the HTML files directly
+theme: null
+
+# Exclude from processing
+exclude:
+  - "*.md"
+  - "Gemfile"
+  - "Gemfile.lock"
+  - ".github"
+
+# Enable GitHub Pages
+plugins: []

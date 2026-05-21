@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HHL & QSVT — Quantum Linear Algebra | Quantum AI Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css"/>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], tags: 'ams' },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">⬡ Quantum<span>AI</span>Hub</a>
+    <div class="nav-links">
+      <a href="../index.html">Papers</a>
+      <a href="qvit-cherrat-2024.html">QViT</a>
+      <a href="barren-plateaus-dla.html">Barren Plateaus</a>
+      <a href="hybrid-transformers.html">Transformers</a>
+      <a href="quddpm.html">Diffusion</a>
+      <a href="hhl-qsvt.html" class="active">HHL/QSVT</a>
+      <a href="discocat-lambeq.html">DisCoCat</a>
+    </div>
+    <div class="nav-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search…" readonly/>
+    </div>
+  </div>
+</nav>
+<div id="search-overlay">
+  <div class="search-box">
+    <input id="search-input" class="search-input" type="text" placeholder="Search papers…"/>
+    <div id="search-results" class="search-results"></div>
+    <div class="search-hint">↵ open · Esc close</div>
+  </div>
+</div>
+
+<div class="container-narrow">
+  <div style="padding-top:2rem">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">/</span>
+      <a href="../index.html#timeline">Papers</a><span class="breadcrumb-sep">/</span>
+      <span>HHL &amp; QSVT</span>
+    </div>
+  </div>
+
+  <div class="paper-page-header">
+    <div class="paper-page-meta">
+      <span class="paper-year">2009–2019</span>
+      <span class="tag tag-algo">Algorithms</span>
+    </div>
+    <h1 class="paper-page-title">HHL &amp; QSVT: Quantum Linear Algebra Foundations</h1>
+    <div class="paper-page-authors">Harrow, Hassidim, Lloyd (HHL, 2009); Gilyén, Su, Low, Wiebe (QSVT, 2019)</div>
+    <div class="paper-page-venue">
+      PRL 103, 150502 (2009) · <a href="https://arxiv.org/abs/0811.3171" target="_blank" style="color:var(--cyan)">HHL arXiv</a> &nbsp;|&nbsp;
+      STOC 2019 · <a href="https://arxiv.org/abs/1806.01838" target="_blank" style="color:var(--cyan)">QSVT arXiv</a>
+    </div>
+  </div>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#problem">Problem Statement</a></li>
+      <li><a href="#hhl-algorithm">HHL Algorithm</a></li>
+      <li><a href="#hhl-circuit">HHL Circuit</a></li>
+      <li><a href="#hhl-complexity">Complexity &amp; Caveats</a></li>
+      <li><a href="#dequantization">Dequantization (Tang 2019)</a></li>
+      <li><a href="#qsvt">QSVT Framework</a></li>
+      <li><a href="#block-encoding">Block Encoding</a></li>
+      <li><a href="#qsp">Quantum Signal Processing</a></li>
+      <li><a href="#applications">Applications to QML</a></li>
+      <li><a href="#qmcmc">Quantum-Enhanced MCMC</a></li>
+    </ol>
+  </div>
+
+  <div class="content-section" id="problem">
+    <h2>1. Problem Statement</h2>
+    <p>
+      Given a Hermitian matrix $A \in \mathbb{C}^{N\times N}$ (sparse, well-conditioned)
+      and a vector $\mathbf{b} \in \mathbb{R}^N$, solve the linear system:
+    </p>
+    <div class="math-block">
+      $$A\mathbf{x} = \mathbf{b} \implies \mathbf{x} = A^{-1}\mathbf{b}$$
+    </div>
+    <div class="math-label">Eq. (1) — Classical linear system</div>
+
+    <p>Best classical algorithm: conjugate gradient in $O(N \cdot \kappa \cdot \log(1/\epsilon))$ where $\kappa = \|A\|\cdot\|A^{-1}\|$ is the condition number.</p>
+
+    <p><strong>HHL goal:</strong> Prepare the quantum state:</p>
+    <div class="math-block">
+      $$|x\rangle = \frac{A^{-1}|b\rangle}{\|A^{-1}|b\rangle\|}$$
+    </div>
+    <div class="math-label">Eq. (2) — Target quantum state encoding the solution</div>
+
+    <div class="callout callout-warn">
+      <strong>Important distinction:</strong> HHL outputs a <em>quantum state</em> $|x\rangle$, not the full vector $\mathbf{x}$. Extracting all $N$ components requires tomography — $O(N)$ measurements — which can negate the speedup. HHL is useful only when downstream processing can be done on the quantum state directly.
+    </div>
+  </div>
+
+  <div class="content-section" id="hhl-algorithm">
+    <h2>2. HHL Algorithm</h2>
+    <p>The algorithm proceeds in three stages using quantum phase estimation (QPE):</p>
+
+    <h3>Step 1: Eigendecomposition via QPE</h3>
+    <p>Decompose $|b\rangle$ in the eigenbasis of $A$:</p>
+    <div class="math-block">
+      $$|b\rangle = \sum_j \beta_j |\psi_j\rangle, \quad A|\psi_j\rangle = \lambda_j|\psi_j\rangle$$
+    </div>
+    <div class="math-label">Eq. (3) — Spectral decomposition of $|b\rangle$ in eigenbasis of $A$</div>
+
+    <p>Quantum phase estimation encodes eigenvalues $\lambda_j$ into an ancilla register:</p>
+    <div class="math-block">
+      $$|b\rangle|0\rangle \xrightarrow{\text{QPE}} \sum_j \beta_j |\psi_j\rangle |\tilde{\lambda}_j\rangle$$
+    </div>
+    <div class="math-label">Eq. (4) — QPE encodes eigenvalues into ancilla (approximate: $\tilde{\lambda}_j \approx \lambda_j$)</div>
+
+    <h3>Step 2: Controlled Rotation</h3>
+    <p>Apply a rotation conditioned on $\tilde{\lambda}_j$ to a single ancilla qubit:</p>
+    <div class="math-block">
+      $$\sum_j \beta_j |\psi_j\rangle |\tilde{\lambda}_j\rangle |0\rangle \to \sum_j \beta_j |\psi_j\rangle |\tilde{\lambda}_j\rangle \left(\sqrt{1 - \frac{C^2}{\tilde{\lambda}_j^2}}|0\rangle + \frac{C}{\tilde{\lambda}_j}|1\rangle\right)$$
+    </div>
+    <div class="math-label">Eq. (5) — Controlled rotation: encodes $1/\lambda_j$ in amplitude</div>
+
+    <h3>Step 3: Uncompute QPE + Measure</h3>
+    <p>Uncompute the eigenvalue register, then measure the ancilla in $|1\rangle$:</p>
+    <div class="math-block">
+      $$|\text{success}\rangle \propto \sum_j \beta_j \cdot \frac{C}{\lambda_j} |\psi_j\rangle = C \cdot A^{-1}|b\rangle$$
+    </div>
+    <div class="math-label">Eq. (6) — Post-selection on $|1\rangle$ gives $|x\rangle \propto A^{-1}|b\rangle$</div>
+  </div>
+
+  <div class="content-section" id="hhl-circuit">
+    <h2>3. HHL Circuit</h2>
+    <div class="arch-diagram">
+<pre>
+HHL Circuit Schematic:
+
+Ancilla:    |0⟩ ──────────────────────────────────[R(λ)]──────────────── Meas
+                                                      │ (controlled on clock)
+Clock:      |0⟩ⁿ ──[H⊗ⁿ]──[Controlled-U²ᵏ]──[QFT†]──────────────[QFT]──[H]──
+                          (k=0..n-1)         ↑                    ↑
+                                         QPE maps                Inverse QPE
+                                         λⱼ → |λ̃ⱼ⟩              (uncompute)
+
+Input:      |b⟩ ──[State prep]─────────────────────────────────────────────────
+
+Result:     ancilla=1 → |x⟩ ∝ A⁻¹|b⟩   (post-selected)
+
+Gates:
+  H = Hadamard
+  Controlled-U²ᵏ = controlled e^{iAt·2^k}  (Hamiltonian simulation)
+  QFT† = inverse Quantum Fourier Transform
+  R(λ) = Ry(2 arcsin(C/λ))  (amplitude encoding of 1/λ)
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="hhl-complexity">
+    <h2>4. Complexity &amp; Caveats</h2>
+    <div class="math-block">
+      $$T_{\text{HHL}} = O\!\left(\log(N)\cdot \frac{\kappa^2}{\epsilon}\right) \quad \text{vs.} \quad T_{\text{classical}} = O(N\kappa\log(1/\epsilon))$$
+    </div>
+    <div class="math-label">Eq. (7) — HHL exponential speedup in $N$, quadratic in $\kappa$</div>
+
+    <div class="callout callout-warn">
+      <strong>Four caveats that can negate the speedup:</strong><br/>
+      1. <strong>State preparation:</strong> Loading $|b\rangle$ from classical data requires $O(N)$ gates (or $O(\text{polylog}(N))$ with QRAM).<br/>
+      2. <strong>Readout:</strong> Extracting $\mathbf{x}$ from $|x\rangle$ requires $O(N)$ measurements (tomography).<br/>
+      3. <strong>Sparsity:</strong> $A$ must be $s$-sparse; complexity includes factor $s^2$.<br/>
+      4. <strong>Condition number:</strong> Complexity is $O(\kappa^2)$ — poorly conditioned matrices give polynomial (not exponential) advantage.
+    </div>
+  </div>
+
+  <div class="content-section" id="dequantization">
+    <h2>5. Dequantization (Tang 2019)</h2>
+    <p>
+      Ewin Tang (2019) showed that <em>classical</em> sampling-based algorithms can achieve similar complexities
+      to HHL for many ML tasks, given similar data access assumptions (sample access to $\mathbf{b}$ and $A$).
+    </p>
+    <div class="math-block">
+      $$T_{\text{Tang}} = O\!\left(\text{poly}(\kappa, 1/\epsilon) \cdot \text{polylog}(N)\right)$$
+    </div>
+    <div class="math-label">Eq. (8) — Classical dequantized algorithm (comparable to HHL under same data access)</div>
+    <div class="callout callout-warn">
+      <strong>Impact:</strong> Tang's result shows that many claimed quantum ML speedups (recommendation systems, PCA, clustering) are not exponential when classical algorithms are also given quantum-inspired data access (sample + query access). It does NOT disprove all quantum advantage — only for specific tasks.
+    </div>
+  </div>
+
+  <div class="content-section" id="qsvt">
+    <h2>6. QSVT Framework</h2>
+    <p>
+      Quantum Singular Value Transformation (QSVT, Gilyén et al. 2019) is a unifying framework
+      that generalises HHL, phase estimation, amplitude amplification, and dozens of quantum algorithms.
+    </p>
+    <div class="callout">
+      <strong>Core idea:</strong> Given a block-encoding of $A$, apply any polynomial transformation $P(A)$ to its singular values using quantum signal processing (QSP).
+    </div>
+    <div class="math-block">
+      $$\text{QSVT: } A \xrightarrow{\text{block-encoding}} U_A \xrightarrow{\text{QSP phases }\Phi} P^{SV}(A)$$
+    </div>
+    <div class="math-label">Eq. (9) — QSVT applies polynomial $P$ to singular values of $A$</div>
+  </div>
+
+  <div class="content-section" id="block-encoding">
+    <h2>7. Block Encoding</h2>
+    <p>
+      A unitary $U_A$ is an $(\alpha, a, \epsilon)$-block-encoding of $A$ if:
+    </p>
+    <div class="math-block">
+      $$\left\|\langle 0|^{\otimes a} U_A |0\rangle^{\otimes a} - \frac{A}{\alpha}\right\| \leq \epsilon$$
+    </div>
+    <div class="math-label">Eq. (10) — Block-encoding: $A/\alpha$ appears in top-left block of $U_A$</div>
+
+    <p>Visually:</p>
+    <div class="arch-diagram">
+<pre>
+U_A  =  ┌──────────────────┐
+         │  A/α    ·  ·  · │   ← top-left block is A/α
+         │  ·      ·  ·  · │
+         │  ·      ·  ·  · │
+         └──────────────────┘
+
+Ancilla register |0⟩ᵃ selects the top-left block:
+   ⟨0|ᵃ U_A |0⟩ᵃ  =  A/α
+</pre>
+    </div>
+  </div>
+
+  <div class="content-section" id="qsp">
+    <h2>8. Quantum Signal Processing</h2>
+    <p>
+      QSP applies a degree-$d$ polynomial $P(\lambda)$ to each singular value $\lambda$ of $A$,
+      using a sequence of single-qubit rotations with phases $\Phi = (\phi_0, \phi_1, \ldots, \phi_d)$:
+    </p>
+    <div class="math-block">
+      $$U_\Phi = e^{i\phi_0 Z}\prod_{k=1}^{d} \left(W(\lambda)\, e^{i\phi_k Z}\right)$$
+    </div>
+    <div class="math-label">Eq. (11) — QSP sequence ($W(\lambda) = $ signal rotation, $e^{i\phi Z} = $ processing rotation)</div>
+
+    <div class="math-block">
+      \begin{pmatrix} P(\lambda) & \cdot \\ \cdot & \cdot \end{pmatrix} = \langle +|U_\Phi|+\rangle
+    </div>
+    <div class="math-label">Eq. (12) — Top-left element implements $P(\lambda)$ for any polynomial satisfying parity/norm conditions</div>
+
+    <h3>QSVT Unified Algorithm View</h3>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Algorithm</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">Polynomial $P$</th>
+          <th style="padding:.5rem .8rem;text-align:left;color:var(--muted)">QSVT instantiation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">HHL</td>
+          <td style="padding:.5rem .8rem">$P(\lambda) \approx 1/\lambda$</td>
+          <td style="padding:.5rem .8rem">Polynomial approximation to $1/x$ via QSVT</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">Phase estimation</td>
+          <td style="padding:.5rem .8rem">$P(\lambda) = e^{i\lambda t}$</td>
+          <td style="padding:.5rem .8rem">Chebyshev approximation</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(36,48,80,.4)">
+          <td style="padding:.5rem .8rem">Amplitude amplification</td>
+          <td style="padding:.5rem .8rem">$P(\lambda) = $ threshold</td>
+          <td style="padding:.5rem .8rem">Sign function approximation</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem .8rem">Hamiltonian simulation</td>
+          <td style="padding:.5rem .8rem">$P(\lambda) = e^{-iH\tau}$ (Chebyshev)</td>
+          <td style="padding:.5rem .8rem">Optimal product formula</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="content-section" id="applications">
+    <h2>9. Applications to QML</h2>
+    <div class="grid-2">
+      <div class="card" style="padding:1rem">
+        <h4>Quantum Kernel Methods</h4>
+        <p style="font-size:.84rem;color:var(--muted)">Kernel matrix $K_{ij} = |\langle\phi(x_i)|\phi(x_j)\rangle|^2$ computed via SWAP test. SVM dual problem solved via HHL. Caveat: kernel concentration in high dimensions.</p>
+      </div>
+      <div class="card" style="padding:1rem">
+        <h4>Quantum PCA</h4>
+        <p style="font-size:.84rem;color:var(--muted)">QSVT extracts top eigenvectors of covariance matrix. Exponential speedup over classical PCA — but dequantized by Tang 2018.</p>
+      </div>
+      <div class="card" style="padding:1rem">
+        <h4>Quantum Boltzmann Machines</h4>
+        <p style="font-size:.84rem;color:var(--muted)">Gibbs sampling via quantum MCMC (Layden et al.). QSVT used to simulate the Gibbs state $e^{-\beta H}/Z$ preparation.</p>
+      </div>
+      <div class="card" style="padding:1rem">
+        <h4>Quantum LLM Inference</h4>
+        <p style="font-size:.84rem;color:var(--muted)">Attention matrix multiplication: $O \propto A^{-1}b$ via HHL. Key open problem: efficient QRAM for token embeddings.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-section" id="qmcmc">
+    <h2>10. Quantum-Enhanced MCMC (Layden et al. Nature 2023)</h2>
+    <p>Classical MCMC (Metropolis-Hastings) is limited by mixing time $\tau_{\text{mix}}$ of the Markov chain. Quantum MCMC uses quantum coherence to propose <em>non-local</em> moves:</p>
+    <div class="math-block">
+      $$\text{Quantum proposal: } |\psi\rangle = \frac{1}{\sqrt{Z_\beta}} \sum_x e^{-\beta E(x)/2} |x\rangle$$
+    </div>
+    <div class="math-label">Eq. (13) — Coherent Gibbs state proposal distribution</div>
+    <div class="math-block">
+      $$\tau_{\text{mix}}^{\text{quantum}} \in O\!\left(\sqrt{\tau_{\text{mix}}^{\text{classical}}}\right) \quad \text{(quadratic speedup)}$$
+    </div>
+    <div class="math-label">Eq. (14) — Quadratic speedup in mixing time via quantum proposals</div>
+    <div class="callout">
+      Demonstrated on 27-qubit IBM processors. Key application: Boltzmann machine training, lattice field theory, drug discovery sampling.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="margin-bottom:3rem">
+    <h3 style="margin-bottom:1rem;color:var(--primary-l)">Related Papers</h3>
+    <div class="grid-2" style="gap:.75rem">
+      <a class="card" href="discocat-lambeq.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-nlp">NLP/LLM</span></div>
+        <div style="font-weight:600;margin-top:.4rem">DisCoCat &amp; lambeq</div>
+        <div style="font-size:.82rem;color:var(--muted)">Compositional quantum NLP using circuit algebra</div>
+      </a>
+      <a class="card" href="barren-plateaus-dla.html" style="display:block;text-decoration:none;padding:1rem;color:inherit">
+        <div class="paper-meta"><span class="tag tag-theory">Theory</span></div>
+        <div style="font-weight:600;margin-top:.4rem">Barren Plateaus &amp; DLA</div>
+        <div style="font-size:.82rem;color:var(--muted)">Trainability of quantum circuits used in QSVT-based QML</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p><a href="../index.html">← Back to Quantum AI Hub</a> · Last updated May 2026</p>
+  </div>
+</footer>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>
