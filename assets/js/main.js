@@ -34,6 +34,7 @@ const PAPERS = [
   { year: 2025, title: "Classical Shadows for Quantum Foundation Models", authors: "Various", tags: ["theory","hybrid"], url: "#", key: "shadows2025" },
   // 2026
   { year: 2026, title: "Quantum-Classical Co-design for Hybrid Inference", authors: "Various", tags: ["hybrid"], url: "#", key: "codesign2026" },
+  { year: 2026, title: "QMC-Net: Data-Aware Quantum Representations for Remote Sensing Image Classification", authors: "Md Aminur Hossain, Ayush V. Patel, Biplab Banerjee", tags: ["hybrid"], url: "https://arxiv.org/abs/2604.11817", key: "qmcnet2026" },
 ];
 
 // ---- Tag labels ----
