@@ -306,6 +306,15 @@ section { padding: 3.5rem 0; }
   border-radius: var(--radius);
   padding: 1.2rem 1.4rem;
 }
+
+/* Remove default list bullets — milestone cards use ::before ▸ instead */
+.milestone-highlights,
+.hw-card ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
 .hw-card .hw-name {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 1rem; font-weight: 700;

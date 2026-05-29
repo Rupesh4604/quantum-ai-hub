@@ -1,928 +1,1568 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quantum AI Hub — Papers, Models & Advances</title>
-  <meta name="description" content="Curated tracker of Quantum ML, Quantum NLP, Quantum Vision, and Hybrid Quantum-Classical research."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="assets/css/style.css"/>
-  <!-- MathJax -->
-  <script>
-    window.MathJax = {
-      tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
-      svg: { fontCache: 'global' }
-    };
-  </script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-  <style>
-    /* Index-specific styles */
-    .filter-bar {
-      display: flex; flex-wrap: wrap; gap: .4rem;
-      margin-bottom: 1.5rem; align-items: center;
-    }
-    .filter-bar span { font-size: .8rem; color: var(--muted); margin-right: .3rem; }
-    .filter-btn {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: .75rem; font-weight: 600;
-      padding: .3rem .75rem; border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--card); color: var(--muted);
-      cursor: pointer; transition: all .2s;
-    }
-    .filter-btn:hover, .filter-btn.active {
-      background: var(--primary); color: #fff; border-color: var(--primary);
-    }
-    .latest-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px,1fr));
-      gap: 1rem; margin-bottom: 1rem;
-    }
-    .latest-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.3rem;
-      position: relative; overflow: hidden;
-      transition: all .25s;
-    }
-    .latest-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--glow); }
-    .latest-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--primary), var(--cyan));
-    }
-    .new-badge {
-      display: inline-block;
-      background: var(--green); color: #000;
-      font-size: .65rem; font-weight: 700;
-      padding: .1rem .4rem; border-radius: 3px;
-      font-family: 'IBM Plex Mono', monospace;
-      margin-left: .4rem; vertical-align: middle;
-    }
-    .milestone-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.3rem 1.5rem;
-      transition: all .25s;
-    }
-    .milestone-card:hover { border-color: var(--cyan); }
-    .milestone-org { font-size: .75rem; color: var(--muted); margin-bottom: .3rem; font-family: 'IBM Plex Mono', monospace; }
-    .milestone-name { font-size: 1.1rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
-    .milestone-date { font-size: .78rem; color: var(--amber); font-family: 'IBM Plex Mono', monospace; }
-    .milestone-highlights { margin-top: .7rem; }
-    .milestone-highlights li {
-      font-size: .83rem; color: var(--text);
-      margin-bottom: .3rem; padding-left: .8rem;
-      position: relative;
-    }
-    .milestone-highlights li::before {
-      content: '▸'; position: absolute; left: 0;
-      color: var(--cyan); font-size: .7rem;
-    }
-  </style>
-</head>
-<body>
-
-<!-- Navigation -->
-<nav>
-  <div class="nav-inner">
-    <a class="nav-logo" href="index.html">⬡ Quantum<span>AI</span>Hub</a>
-    <div class="nav-links">
-      <a href="index.html" class="active">Papers</a>
-      <a href="#hardware">Hardware</a>
-      <a href="#conferences">Conferences</a>
-      <a href="papers/qvit-cherrat-2024.html">QViT</a>
-      <a href="papers/barren-plateaus-dla.html">Barren Plateaus</a>
-      <a href="papers/hybrid-transformers.html">Transformers</a>
-      <a href="papers/quddpm.html">Diffusion</a>
-      <a href="papers/hhl-qsvt.html">HHL/QSVT</a>
-      <a href="papers/discocat-lambeq.html">DisCoCat</a>
-    </div>
-    <div class="nav-search" title="Press / to search">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" placeholder="Search papers…" readonly/>
-      <span style="font-size:.7rem;color:var(--muted);font-family:monospace">/</span>
-    </div>
-  </div>
-</nav>
-
-<!-- Search Overlay -->
-<div id="search-overlay">
-  <div class="search-box">
-    <input id="search-input" class="search-input" type="text" placeholder="Search papers, authors, topics…"/>
-    <div id="search-results" class="search-results"></div>
-    <div class="search-hint">↵ open · ↑↓ navigate · Esc close</div>
-  </div>
-</div>
-
-<!-- Hero -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
-  <div class="hero-inner container">
-    <div class="hero-badge fade-up">Quantum AI Research Tracker</div>
-    <h1 class="fade-up fade-up-d1">
-      <span class="hl">Quantum</span> Machine Learning<br/>
-      &amp; <span class="hl2">Hybrid Quantum-Classical</span> AI
-    </h1>
-    <p class="lead fade-up fade-up-d2">
-      Curated index of papers, architectures, and advances at the intersection of
-      quantum computing, deep learning, LLMs, and vision — covering fully quantum networks
-      and hybrid quantum-classical models.
-    </p>
-    <div style="display:flex;justify-content:center;gap:.7rem;flex-wrap:wrap" class="fade-up fade-up-d3">
-      <a href="#latest" class="btn btn-primary">Latest Papers</a>
-      <a href="#timeline" class="btn btn-ghost">Full Timeline</a>
-      <a href="#hardware" class="btn btn-cyan">Hardware Milestones</a>
-    </div>
-    <div class="hero-stats fade-up fade-up-d3">
-      <div class="stat"><span class="stat-num">25+</span><span class="stat-label">Key Papers</span></div>
-      <div class="stat"><span class="stat-num">8</span><span class="stat-label">Topics Covered</span></div>
-      <div class="stat"><span class="stat-num">2019–26</span><span class="stat-label">Time Span</span></div>
-      <div class="stat"><span class="stat-num">5+</span><span class="stat-label">HW Platforms</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- Latest Papers -->
-<section id="latest">
-  <div class="container">
-    <div class="section-title">
-      <div class="section-icon">🔬</div>
-      <h2>Latest &amp; Highlighted</h2>
-      <div class="section-line"></div>
-    </div>
-    <p class="text-muted" style="margin-bottom:1.5rem">Most recent results and breakthrough papers — click any card to read the full analysis with equations and architecture diagrams.</p>
-    <div class="latest-grid">
-
-      <a class="latest-card" href="papers/qvit-cherrat-2024.html" style="display:block;text-decoration:none;color:inherit">
-        <div class="paper-meta">
-          <span class="paper-year">2024</span>
-          <span class="tag tag-vision">Vision</span>
-          <span class="tag tag-hybrid">Hybrid Q-C</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quantum AI Hub — Papers, Models & Advances</title>
+    <meta
+      name="description"
+      content="Curated tracker of Quantum ML, Quantum NLP, Quantum Vision, and Hybrid Quantum-Classical research."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <!-- MathJax -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+        },
+        svg: { fontCache: "global" },
+      };
+    </script>
+    <script
+      id="MathJax-script"
+      async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+    ></script>
+    <style>
+      /* Index-specific styles */
+      .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+      }
+      .filter-bar span {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-right: 0.3rem;
+      }
+      .filter-btn {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .filter-btn:hover,
+      .filter-btn.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+      .latest-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .latest-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.3rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.25s;
+      }
+      .latest-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--glow);
+      }
+      .latest-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary), var(--cyan));
+      }
+      .new-badge {
+        display: inline-block;
+        background: var(--green);
+        color: #000;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.1rem 0.4rem;
+        border-radius: 3px;
+        font-family: "IBM Plex Mono", monospace;
+        margin-left: 0.4rem;
+        vertical-align: middle;
+      }
+      .milestone-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.3rem 1.5rem;
+        transition: all 0.25s;
+      }
+      .milestone-card:hover {
+        border-color: var(--cyan);
+      }
+      .milestone-org {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-bottom: 0.3rem;
+        font-family: "IBM Plex Mono", monospace;
+      }
+      .milestone-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--cyan);
+        margin-bottom: 0.5rem;
+      }
+      .milestone-date {
+        font-size: 0.78rem;
+        color: var(--amber);
+        font-family: "IBM Plex Mono", monospace;
+      }
+      .milestone-highlights {
+        margin-top: 0.7rem;
+        list-style: none;
+        padding-left: 0;
+        margin-left: 0;
+      }
+      .milestone-highlights li {
+        font-size: 0.83rem;
+        color: var(--text);
+        margin-bottom: 0.3rem;
+        padding-left: 0.9rem;
+        position: relative;
+        list-style: none;
+      }
+      .milestone-highlights li::before {
+        content: "▸";
+        position: absolute;
+        left: 0;
+        color: var(--cyan);
+        font-size: 0.7rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav>
+      <div class="nav-inner">
+        <a class="nav-logo" href="index.html">⬡ Quantum<span>AI</span>Hub</a>
+        <div class="nav-links">
+          <a href="index.html" class="active">Papers</a>
+          <a href="#hardware">Hardware</a>
+          <a href="#conferences">Conferences</a>
+          <a href="papers/qvit-cherrat-2024.html">QViT</a>
+          <a href="papers/barren-plateaus-dla.html">Barren Plateaus</a>
+          <a href="papers/hybrid-transformers.html">Transformers</a>
+          <a href="papers/quddpm.html">Diffusion</a>
+          <a href="papers/hhl-qsvt.html">HHL/QSVT</a>
+          <a href="papers/discocat-lambeq.html">DisCoCat</a>
         </div>
-        <div class="paper-title">Quantum Vision Transformers <span class="new-badge">KEY</span></div>
-        <div class="paper-authors">Cherrat, Kerenidis, Mathur et al.</div>
-        <p style="font-size:.84rem;color:var(--muted);margin-top:.4rem">
-          Orthogonal quantum layers via RBS gates replace classical linear layers in ViT.
-          Achieves competitive accuracy with provably quantum advantage in inference scaling.
-        </p>
-        <div style="margin-top:.8rem;font-size:.78rem;color:var(--primary-l);font-family:monospace">Read analysis → equations + architecture</div>
-      </a>
-
-      <a class="latest-card" href="papers/barren-plateaus-dla.html" style="display:block;text-decoration:none;color:inherit">
-        <div class="paper-meta">
-          <span class="paper-year">2024–25</span>
-          <span class="tag tag-theory">Theory</span>
+        <div class="nav-search" title="Press / to search">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            style="color: var(--muted)"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input type="text" placeholder="Search papers…" readonly />
+          <span
+            style="
+              font-size: 0.7rem;
+              color: var(--muted);
+              font-family: monospace;
+            "
+            >/</span
+          >
         </div>
-        <div class="paper-title">Barren Plateaus via Dynamical Lie Algebras <span class="new-badge">THEORY</span></div>
-        <div class="paper-authors">Ragone &amp; Larocca (2024); Cerezo et al. (2025)</div>
-        <p style="font-size:.84rem;color:var(--muted);margin-top:.4rem">
-          Unifies barren plateau theory via DLA dimension.
-          $\text{Var}[\partial_\mu E] \leq C / |\mathfrak{g}|$ — exponential in $n$ for generic circuits.
-        </p>
-        <div style="margin-top:.8rem;font-size:.78rem;color:var(--primary-l);font-family:monospace">Read analysis → DLA theory + mitigation</div>
-      </a>
-
-      <a class="latest-card" href="papers/hybrid-transformers.html" style="display:block;text-decoration:none;color:inherit">
-        <div class="paper-meta">
-          <span class="paper-year">2024</span>
-          <span class="tag tag-nlp">NLP/LLM</span>
-          <span class="tag tag-hybrid">Hybrid Q-C</span>
-        </div>
-        <div class="paper-title">Quixer · HyQuT · QTHA <span class="new-badge">KEY</span></div>
-        <div class="paper-authors">Nguyen et al.; Chen et al.</div>
-        <p style="font-size:.84rem;color:var(--muted);margin-top:.4rem">
-          Quantum transformer architectures for language: full quantum self-attention,
-          hybrid Q/K/V decomposition, and token-level hybrid attention.
-        </p>
-        <div style="margin-top:.8rem;font-size:.78rem;color:var(--primary-l);font-family:monospace">Read analysis → architectures + circuits</div>
-      </a>
-
-      <a class="latest-card" href="papers/quddpm.html" style="display:block;text-decoration:none;color:inherit">
-        <div class="paper-meta">
-          <span class="paper-year">2024</span>
-          <span class="tag tag-gen">Generative</span>
-          <span class="tag tag-hybrid">Hybrid Q-C</span>
-        </div>
-        <div class="paper-title">QuDDPM · MSQuDDPM</div>
-        <div class="paper-authors">Cacioppo et al.; Various</div>
-        <p style="font-size:.84rem;color:var(--muted);margin-top:.4rem">
-          Quantum score network replaces classical U-Net in DDPM. Decoherence channels
-          as natural quantum noise schedule. Multi-scale extension.
-        </p>
-        <div style="margin-top:.8rem;font-size:.78rem;color:var(--primary-l);font-family:monospace">Read analysis → forward/reverse process</div>
-      </a>
-
-      <a class="latest-card" href="papers/hhl-qsvt.html" style="display:block;text-decoration:none;color:inherit">
-        <div class="paper-meta">
-          <span class="paper-year">2009–23</span>
-          <span class="tag tag-algo">Algorithms</span>
-        </div>
-        <div class="paper-title">HHL &amp; QSVT: Quantum Linear Algebra</div>
-        <div class="paper-authors">Harrow, Hassidim, Lloyd; Gilyén et al.</div>
-        <p style="font-size:.84rem;color:var(--muted);margin-top:.4rem">
-          Exponential speedup for linear systems via phase estimation.
-          QSVT unifies quantum algorithms via block-encoding + quantum signal processing.
-        </p>
-        <div style="margin-top:.8rem;font-size:.78rem;color:var(--primary-l);font-family:monospace">Read analysis → circuit complexity</div>
-      </a>
-
-      <div class="latest-card" style="border-color:rgba(74,222,128,.3)">
-        <div class="paper-meta">
-          <span class="paper-year" style="background:var(--green)">2024</span>
-          <span class="tag tag-news">News</span>
-          <span class="tag tag-hw">Hardware</span>
-        </div>
-        <div class="paper-title">Google Willow: Below-Threshold QEC</div>
-        <div class="paper-authors">Google Quantum AI — December 2024</div>
-        <p style="font-size:.84rem;color:var(--muted);margin-top:.4rem">
-          First demonstration of below-threshold quantum error correction.
-          Error rate decreases exponentially as code distance increases.
-          105 physical qubits; RCS benchmark: $10^{25}\times$ classical.
-        </p>
-        <a href="https://arxiv.org/abs/2412.14256" target="_blank" class="btn btn-cyan" style="margin-top:.8rem;font-size:.75rem">arXiv →</a>
       </div>
+    </nav>
 
-    </div>
-  </div>
-</section>
-
-<!-- Full Timeline -->
-<section id="timeline">
-  <div class="container">
-    <div class="section-title">
-      <div class="section-icon">📅</div>
-      <h2>Chronological Timeline</h2>
-      <div class="section-line"></div>
-    </div>
-
-    <!-- Filter bar -->
-    <div class="filter-bar">
-      <span>Filter:</span>
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="nlp">NLP / LLM</button>
-      <button class="filter-btn" data-filter="vision">Vision</button>
-      <button class="filter-btn" data-filter="gen">Generative</button>
-      <button class="filter-btn" data-filter="theory">Theory</button>
-      <button class="filter-btn" data-filter="algo">Algorithms</button>
-      <button class="filter-btn" data-filter="hybrid">Hybrid Q-C</button>
-      <button class="filter-btn" data-filter="hw">Hardware</button>
+    <!-- Search Overlay -->
+    <div id="search-overlay">
+      <div class="search-box">
+        <input
+          id="search-input"
+          class="search-input"
+          type="text"
+          placeholder="Search papers, authors, topics…"
+        />
+        <div id="search-results" class="search-results"></div>
+        <div class="search-hint">↵ open · ↑↓ navigate · Esc close</div>
+      </div>
     </div>
 
-    <div class="timeline">
-
-      <!-- 2026 -->
-      <div class="timeline-year-group">
-        <div class="timeline-year-header">
-          <span class="timeline-year-label">2026</span>
-          <div class="timeline-year-line"></div>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-inner container">
+        <div class="hero-badge fade-up">Quantum AI Research Tracker</div>
+        <h1 class="fade-up fade-up-d1">
+          <span class="hl">Quantum</span> Machine Learning<br />
+          &amp; <span class="hl2">Hybrid Quantum-Classical</span> AI
+        </h1>
+        <p class="lead fade-up fade-up-d2">
+          Curated index of papers, architectures, and advances at the
+          intersection of quantum computing, deep learning, LLMs, and vision —
+          covering fully quantum networks and hybrid quantum-classical models.
+        </p>
+        <div
+          style="
+            display: flex;
+            justify-content: center;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+          "
+          class="fade-up fade-up-d3"
+        >
+          <a href="#latest" class="btn btn-primary">Latest Papers</a>
+          <a href="#timeline" class="btn btn-ghost">Full Timeline</a>
+          <a href="#hardware" class="btn btn-cyan">Hardware Milestones</a>
         </div>
-        <div class="grid-2">
-          <div class="card paper-card" data-tags="hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2026</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">Quantum-Classical Co-Design for Hybrid Inference</div>
-            <div class="paper-authors">Various — preprint 2026</div>
-            <div class="paper-abstract">Co-designed quantum-classical pipelines for efficient inference on near-term devices; explores which layers benefit from quantum acceleration.</div>
+        <div class="hero-stats fade-up fade-up-d3">
+          <div class="stat">
+            <span class="stat-num">25+</span
+            ><span class="stat-label">Key Papers</span>
           </div>
-          <div class="card paper-card" data-tags="theory,hw">
-            <div class="paper-meta">
-              <span class="paper-year">2026</span>
-              <span class="tag tag-theory">Theory</span>
-              <span class="tag tag-hw">Hardware</span>
-            </div>
-            <div class="paper-title">Fault-Tolerant QML: LDPC Codes &amp; Logical Qubits</div>
-            <div class="paper-authors">Various — ongoing work</div>
-            <div class="paper-abstract">Early fault-tolerant quantum ML using LDPC codes, targeting logical qubit counts achievable on near-term hardware.</div>
+          <div class="stat">
+            <span class="stat-num">8</span
+            ><span class="stat-label">Topics Covered</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">2019–26</span
+            ><span class="stat-label">Time Span</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">5+</span
+            ><span class="stat-label">HW Platforms</span>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- 2025 -->
-      <div class="timeline-year-group">
-        <div class="timeline-year-header">
-          <span class="timeline-year-label">2025</span>
-          <div class="timeline-year-line"></div>
+    <!-- Latest Papers -->
+    <section id="latest">
+      <div class="container">
+        <div class="section-title">
+          <div class="section-icon">🔬</div>
+          <h2>Latest &amp; Highlighted</h2>
+          <div class="section-line"></div>
         </div>
-        <div class="grid-2">
-          <div class="card paper-card" data-tags="theory">
+        <p class="text-muted" style="margin-bottom: 1.5rem">
+          Most recent results and breakthrough papers — click any card to read
+          the full analysis with equations and architecture diagrams.
+        </p>
+        <div class="latest-grid">
+          <a
+            class="latest-card"
+            href="papers/qvit-cherrat-2024.html"
+            style="display: block; text-decoration: none; color: inherit"
+          >
             <div class="paper-meta">
-              <span class="paper-year">2025</span>
-              <span class="tag tag-theory">Theory</span>
-            </div>
-            <div class="paper-title">Barren Plateaus: A Unifying Analysis via DLA</div>
-            <div class="paper-authors">Cerezo, Larocca et al. — 2025</div>
-            <div class="paper-abstract">Comprehensive framework proving that DLA dimension $|\mathfrak{g}|$ fully determines gradient variance. Identifies structure-preserving ansätze as the only escape.</div>
-            <div class="paper-links">
-              <a href="papers/barren-plateaus-dla.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/2310.06012" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="nlp,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2025</span>
-              <span class="tag tag-nlp">NLP/LLM</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">Quantum-PEFT: Parameter-Efficient Fine-Tuning for QNNs</div>
-            <div class="paper-authors">Various — 2025</div>
-            <div class="paper-abstract">LoRA-style reparameterisation applied to variational quantum circuits; reduces trainable parameters while preserving expressibility. Addresses barren plateau via low-rank structure.</div>
-          </div>
-          <div class="card paper-card" data-tags="vision,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2025</span>
+              <span class="paper-year">2024</span>
               <span class="tag tag-vision">Vision</span>
               <span class="tag tag-hybrid">Hybrid Q-C</span>
             </div>
-            <div class="paper-title">QMAE: Quantum Masked Autoencoders</div>
-            <div class="paper-authors">Various — 2025</div>
-            <div class="paper-abstract">Self-supervised pretraining on quantum hardware via masked reconstruction. Quantum encoder learns compact latent representation; classical decoder reconstructs patches.</div>
-          </div>
-          <div class="card paper-card" data-tags="hybrid,theory">
+            <div class="paper-title">
+              Quantum Vision Transformers <span class="new-badge">KEY</span>
+            </div>
+            <div class="paper-authors">Cherrat, Kerenidis, Mathur et al.</div>
+            <p
+              style="
+                font-size: 0.84rem;
+                color: var(--muted);
+                margin-top: 0.4rem;
+              "
+            >
+              Orthogonal quantum layers via RBS gates replace classical linear
+              layers in ViT. Achieves competitive accuracy with provably quantum
+              advantage in inference scaling.
+            </p>
+            <div
+              style="
+                margin-top: 0.8rem;
+                font-size: 0.78rem;
+                color: var(--primary-l);
+                font-family: monospace;
+              "
+            >
+              Read analysis → equations + architecture
+            </div>
+          </a>
+
+          <a
+            class="latest-card"
+            href="papers/barren-plateaus-dla.html"
+            style="display: block; text-decoration: none; color: inherit"
+          >
             <div class="paper-meta">
-              <span class="paper-year">2025</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
+              <span class="paper-year">2024–25</span>
               <span class="tag tag-theory">Theory</span>
             </div>
-            <div class="paper-title">FNQS: Foundation Networks for Quantum Systems</div>
-            <div class="paper-authors">Various — 2025</div>
-            <div class="paper-abstract">Adapts foundation model pretraining (GPT-style) to quantum many-body systems. Uses classical shadows for efficient readout and QMAE-style SSL objectives.</div>
-          </div>
-          <div class="card paper-card" data-tags="hw,news">
+            <div class="paper-title">
+              Barren Plateaus via Dynamical Lie Algebras
+              <span class="new-badge">THEORY</span>
+            </div>
+            <div class="paper-authors">
+              Ragone &amp; Larocca (2024); Cerezo et al. (2025)
+            </div>
+            <p
+              style="
+                font-size: 0.84rem;
+                color: var(--muted);
+                margin-top: 0.4rem;
+              "
+            >
+              Unifies barren plateau theory via DLA dimension.
+              $\text{Var}[\partial_\mu E] \leq C / |\mathfrak{g}|$ — exponential
+              in $n$ for generic circuits.
+            </p>
+            <div
+              style="
+                margin-top: 0.8rem;
+                font-size: 0.78rem;
+                color: var(--primary-l);
+                font-family: monospace;
+              "
+            >
+              Read analysis → DLA theory + mitigation
+            </div>
+          </a>
+
+          <a
+            class="latest-card"
+            href="papers/hybrid-transformers.html"
+            style="display: block; text-decoration: none; color: inherit"
+          >
             <div class="paper-meta">
-              <span class="paper-year" style="background:var(--green);color:#000">2025</span>
-              <span class="tag tag-hw">Hardware</span>
+              <span class="paper-year">2024</span>
+              <span class="tag tag-nlp">NLP/LLM</span>
+              <span class="tag tag-hybrid">Hybrid Q-C</span>
+            </div>
+            <div class="paper-title">
+              Quixer · HyQuT · QTHA <span class="new-badge">KEY</span>
+            </div>
+            <div class="paper-authors">Nguyen et al.; Chen et al.</div>
+            <p
+              style="
+                font-size: 0.84rem;
+                color: var(--muted);
+                margin-top: 0.4rem;
+              "
+            >
+              Quantum transformer architectures for language: full quantum
+              self-attention, hybrid Q/K/V decomposition, and token-level hybrid
+              attention.
+            </p>
+            <div
+              style="
+                margin-top: 0.8rem;
+                font-size: 0.78rem;
+                color: var(--primary-l);
+                font-family: monospace;
+              "
+            >
+              Read analysis → architectures + circuits
+            </div>
+          </a>
+
+          <a
+            class="latest-card"
+            href="papers/quddpm.html"
+            style="display: block; text-decoration: none; color: inherit"
+          >
+            <div class="paper-meta">
+              <span class="paper-year">2024</span>
+              <span class="tag tag-gen">Generative</span>
+              <span class="tag tag-hybrid">Hybrid Q-C</span>
+            </div>
+            <div class="paper-title">QuDDPM · MSQuDDPM</div>
+            <div class="paper-authors">Cacioppo et al.; Various</div>
+            <p
+              style="
+                font-size: 0.84rem;
+                color: var(--muted);
+                margin-top: 0.4rem;
+              "
+            >
+              Quantum score network replaces classical U-Net in DDPM.
+              Decoherence channels as natural quantum noise schedule.
+              Multi-scale extension.
+            </p>
+            <div
+              style="
+                margin-top: 0.8rem;
+                font-size: 0.78rem;
+                color: var(--primary-l);
+                font-family: monospace;
+              "
+            >
+              Read analysis → forward/reverse process
+            </div>
+          </a>
+
+          <a
+            class="latest-card"
+            href="papers/hhl-qsvt.html"
+            style="display: block; text-decoration: none; color: inherit"
+          >
+            <div class="paper-meta">
+              <span class="paper-year">2009–23</span>
+              <span class="tag tag-algo">Algorithms</span>
+            </div>
+            <div class="paper-title">
+              HHL &amp; QSVT: Quantum Linear Algebra
+            </div>
+            <div class="paper-authors">
+              Harrow, Hassidim, Lloyd; Gilyén et al.
+            </div>
+            <p
+              style="
+                font-size: 0.84rem;
+                color: var(--muted);
+                margin-top: 0.4rem;
+              "
+            >
+              Exponential speedup for linear systems via phase estimation. QSVT
+              unifies quantum algorithms via block-encoding + quantum signal
+              processing.
+            </p>
+            <div
+              style="
+                margin-top: 0.8rem;
+                font-size: 0.78rem;
+                color: var(--primary-l);
+                font-family: monospace;
+              "
+            >
+              Read analysis → circuit complexity
+            </div>
+          </a>
+
+          <div
+            class="latest-card"
+            style="border-color: rgba(74, 222, 128, 0.3)"
+          >
+            <div class="paper-meta">
+              <span class="paper-year" style="background: var(--green)"
+                >2024</span
+              >
               <span class="tag tag-news">News</span>
-            </div>
-            <div class="paper-title">Quantinuum Helios: 56-Qubit Trapped-Ion Processor</div>
-            <div class="paper-authors">Quantinuum — 2025</div>
-            <div class="paper-abstract">56 fully-connected qubits, $>$99.9% two-qubit gate fidelity with native mid-circuit measurement and reset. Enables deep variational circuits with high coherence.</div>
-            <div class="paper-links">
-              <a href="https://www.quantinuum.com/hardware/helios" target="_blank" class="btn btn-cyan">Quantinuum →</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="theory">
-            <div class="paper-meta">
-              <span class="paper-year">2025</span>
-              <span class="tag tag-theory">Theory</span>
-            </div>
-            <div class="paper-title">Classical Shadows for Quantum Foundation Models</div>
-            <div class="paper-authors">Various — 2025</div>
-            <div class="paper-abstract">Classical shadow tomography as efficient readout for large-scale quantum systems. Enables SSL training on quantum hardware with $O(\log n)$ overhead.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2024 -->
-      <div class="timeline-year-group">
-        <div class="timeline-year-header">
-          <span class="timeline-year-label">2024</span>
-          <div class="timeline-year-line"></div>
-        </div>
-        <div class="grid-2">
-          <div class="card paper-card" data-tags="vision,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2024</span>
-              <span class="tag tag-vision">Vision</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">Quantum Vision Transformers (QViT)</div>
-            <div class="paper-authors">Cherrat, Kerenidis, Mathur, Landman et al. — 2024</div>
-            <div class="paper-abstract">Replaces classical linear layers in ViT with orthogonal quantum layers constructed from Reconfigurable Beam Splitter (RBS) gates. Parameter count scales as $O(n)$ vs. $O(n^2)$ classical.</div>
-            <div class="paper-links">
-              <a href="papers/qvit-cherrat-2024.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/2209.08167" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="theory">
-            <div class="paper-meta">
-              <span class="paper-year">2024</span>
-              <span class="tag tag-theory">Theory</span>
-            </div>
-            <div class="paper-title">Barren Plateaus from Dynamical Lie Algebras</div>
-            <div class="paper-authors">Ragone &amp; Larocca et al. — Nature Physics, 2024</div>
-            <div class="paper-abstract">Proves barren plateaus emerge from large DLA dimension. Circuits with exponentially large $|\mathfrak{g}|$ exhibit $\text{Var}[\partial_\mu E] \in O(1/2^n)$.</div>
-            <div class="paper-links">
-              <a href="papers/barren-plateaus-dla.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/2309.09342" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="nlp,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2024</span>
-              <span class="tag tag-nlp">NLP/LLM</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">Quixer: A Quantum Transformer Model</div>
-            <div class="paper-authors">Nguyen, Umeano, Bhatt et al. — 2024</div>
-            <div class="paper-abstract">Full quantum self-attention using QRAM-loaded embeddings and quantum inner product estimation. Circuit-efficient architecture for sequence-to-sequence tasks.</div>
-            <div class="paper-links">
-              <a href="papers/hybrid-transformers.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/2406.04305" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="nlp,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2024</span>
-              <span class="tag tag-nlp">NLP/LLM</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">HyQuT: Hybrid Quantum Transformer</div>
-            <div class="paper-authors">Chen, Zhang et al. — 2024</div>
-            <div class="paper-abstract">Splits attention into classical Q/K (dot-product) and quantum V (variational circuit). Maintains classical attention sparsity while adding quantum expressibility to value projection.</div>
-            <div class="paper-links">
-              <a href="papers/hybrid-transformers.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/2412.00831" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="nlp,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2024</span>
-              <span class="tag tag-nlp">NLP/LLM</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">QTHA: Quantum Token-based Hybrid Attention</div>
-            <div class="paper-authors">Various — 2024</div>
-            <div class="paper-abstract">Per-token quantum circuits compute attention weights. Quantum rotations parameterize the compatibility function; combines with classical feedforward layers.</div>
-            <div class="paper-links">
-              <a href="papers/hybrid-transformers.html" class="btn btn-primary">Analysis</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="gen,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2024</span>
-              <span class="tag tag-gen">Generative</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">QuDDPM: Quantum Denoising Diffusion Probabilistic Models</div>
-            <div class="paper-authors">Cacioppo, Bordoni, Vallecorsa et al. — 2024</div>
-            <div class="paper-abstract">Replaces the classical U-Net score network with a variational quantum circuit. Decoherence channels provide a natural quantum noise schedule for the forward process.</div>
-            <div class="paper-links">
-              <a href="papers/quddpm.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/2401.07049" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="gen,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2024</span>
-              <span class="tag tag-gen">Generative</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
-            </div>
-            <div class="paper-title">MSQuDDPM: Multi-Scale Quantum Diffusion</div>
-            <div class="paper-authors">Various — 2024</div>
-            <div class="paper-abstract">Extension of QuDDPM with multi-resolution quantum circuits at each scale. Addresses the limited qubit count by decomposing generation into coarse-to-fine hierarchy.</div>
-            <div class="paper-links">
-              <a href="papers/quddpm.html" class="btn btn-primary">Analysis</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="hw,news">
-            <div class="paper-meta">
-              <span class="paper-year" style="background:var(--green);color:#000">Dec 2024</span>
               <span class="tag tag-hw">Hardware</span>
-              <span class="tag tag-news">Milestone</span>
             </div>
-            <div class="paper-title">Google Willow: Below-Threshold Quantum Error Correction</div>
+            <div class="paper-title">Google Willow: Below-Threshold QEC</div>
             <div class="paper-authors">Google Quantum AI — December 2024</div>
-            <div class="paper-abstract">First experimental demonstration where increasing code distance decreases logical error rate (below-threshold QEC). 105 qubits; RCS task $10^{25}\times$ faster than classical supercomputers.</div>
-            <div class="paper-links">
-              <a href="https://arxiv.org/abs/2412.14256" target="_blank" class="btn btn-cyan">arXiv</a>
+            <p
+              style="
+                font-size: 0.84rem;
+                color: var(--muted);
+                margin-top: 0.4rem;
+              "
+            >
+              First demonstration of below-threshold quantum error correction.
+              Error rate decreases exponentially as code distance increases. 105
+              physical qubits; RCS benchmark: $10^{25}\times$ classical.
+            </p>
+            <a
+              href="https://arxiv.org/abs/2412.14256"
+              target="_blank"
+              class="btn btn-cyan"
+              style="margin-top: 0.8rem; font-size: 0.75rem"
+              >arXiv →</a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full Timeline -->
+    <section id="timeline">
+      <div class="container">
+        <div class="section-title">
+          <div class="section-icon">📅</div>
+          <h2>Chronological Timeline</h2>
+          <div class="section-line"></div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <span>Filter:</span>
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="nlp">NLP / LLM</button>
+          <button class="filter-btn" data-filter="vision">Vision</button>
+          <button class="filter-btn" data-filter="gen">Generative</button>
+          <button class="filter-btn" data-filter="theory">Theory</button>
+          <button class="filter-btn" data-filter="algo">Algorithms</button>
+          <button class="filter-btn" data-filter="hybrid">Hybrid Q-C</button>
+          <button class="filter-btn" data-filter="hw">Hardware</button>
+        </div>
+
+        <div class="timeline">
+          <!-- 2026 -->
+          <div class="timeline-year-group">
+            <div class="timeline-year-header">
+              <span class="timeline-year-label">2026</span>
+              <div class="timeline-year-line"></div>
+            </div>
+            <div class="grid-2">
+              <div class="card paper-card" data-tags="hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2026</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  Quantum-Classical Co-Design for Hybrid Inference
+                </div>
+                <div class="paper-authors">Various — preprint 2026</div>
+                <div class="paper-abstract">
+                  Co-designed quantum-classical pipelines for efficient
+                  inference on near-term devices; explores which layers benefit
+                  from quantum acceleration.
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="theory,hw">
+                <div class="paper-meta">
+                  <span class="paper-year">2026</span>
+                  <span class="tag tag-theory">Theory</span>
+                  <span class="tag tag-hw">Hardware</span>
+                </div>
+                <div class="paper-title">
+                  Fault-Tolerant QML: LDPC Codes &amp; Logical Qubits
+                </div>
+                <div class="paper-authors">Various — ongoing work</div>
+                <div class="paper-abstract">
+                  Early fault-tolerant quantum ML using LDPC codes, targeting
+                  logical qubit counts achievable on near-term hardware.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2025 -->
+          <div class="timeline-year-group">
+            <div class="timeline-year-header">
+              <span class="timeline-year-label">2025</span>
+              <div class="timeline-year-line"></div>
+            </div>
+            <div class="grid-2">
+              <div class="card paper-card" data-tags="theory">
+                <div class="paper-meta">
+                  <span class="paper-year">2025</span>
+                  <span class="tag tag-theory">Theory</span>
+                </div>
+                <div class="paper-title">
+                  Barren Plateaus in Variational Quantum Computing (Review)
+                </div>
+                <div class="paper-authors">Larocca, Thanasilp, Wang, Cerezo et al. — 2024/2025</div>
+                <div class="paper-abstract">
+                  Comprehensive review unifying all sources of barren plateaus:
+                  expressibility, global cost, noise, and entanglement.
+                  Identifies structure-preserving ansätze as the primary escape.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="papers/barren-plateaus-dla.html"
+                    class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2405.00781"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="nlp,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2025</span>
+                  <span class="tag tag-nlp">NLP/LLM</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  Quantum-PEFT: Parameter-Efficient Fine-Tuning for QNNs
+                </div>
+                <div class="paper-authors">Various — 2025</div>
+                <div class="paper-abstract">
+                  LoRA-style reparameterisation applied to variational quantum
+                  circuits; reduces trainable parameters while preserving
+                  expressibility. Addresses barren plateau via low-rank
+                  structure.
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="vision,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2025</span>
+                  <span class="tag tag-vision">Vision</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">QMAE: Quantum Masked Autoencoders</div>
+                <div class="paper-authors">Various — 2025</div>
+                <div class="paper-abstract">
+                  Self-supervised pretraining on quantum hardware via masked
+                  reconstruction. Quantum encoder learns compact latent
+                  representation; classical decoder reconstructs patches.
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="hybrid,theory">
+                <div class="paper-meta">
+                  <span class="paper-year">2025</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                  <span class="tag tag-theory">Theory</span>
+                </div>
+                <div class="paper-title">
+                  FNQS: Foundation Networks for Quantum Systems
+                </div>
+                <div class="paper-authors">Various — 2025</div>
+                <div class="paper-abstract">
+                  Adapts foundation model pretraining (GPT-style) to quantum
+                  many-body systems. Uses classical shadows for efficient
+                  readout and QMAE-style SSL objectives.
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="hw,news">
+                <div class="paper-meta">
+                  <span
+                    class="paper-year"
+                    style="background: var(--green); color: #000"
+                    >2025</span
+                  >
+                  <span class="tag tag-hw">Hardware</span>
+                  <span class="tag tag-news">News</span>
+                </div>
+                <div class="paper-title">
+                  Quantinuum Helios: 56-Qubit Trapped-Ion Processor
+                </div>
+                <div class="paper-authors">Quantinuum — 2025</div>
+                <div class="paper-abstract">
+                  56 fully-connected qubits, $>$99.9% two-qubit gate fidelity
+                  with native mid-circuit measurement and reset. Enables deep
+                  variational circuits with high coherence.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="https://www.quantinuum.com/hardware/helios"
+                    target="_blank"
+                    class="btn btn-cyan"
+                    >Quantinuum →</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="theory">
+                <div class="paper-meta">
+                  <span class="paper-year">2025</span>
+                  <span class="tag tag-theory">Theory</span>
+                </div>
+                <div class="paper-title">
+                  Classical Shadows for Quantum Foundation Models
+                </div>
+                <div class="paper-authors">Various — 2025</div>
+                <div class="paper-abstract">
+                  Classical shadow tomography as efficient readout for
+                  large-scale quantum systems. Enables SSL training on quantum
+                  hardware with $O(\log n)$ overhead.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2024 -->
+          <div class="timeline-year-group">
+            <div class="timeline-year-header">
+              <span class="timeline-year-label">2024</span>
+              <div class="timeline-year-line"></div>
+            </div>
+            <div class="grid-2">
+              <div class="card paper-card" data-tags="vision,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2024</span>
+                  <span class="tag tag-vision">Vision</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  Quantum Vision Transformers (QViT)
+                </div>
+                <div class="paper-authors">
+                  Cherrat, Kerenidis, Mathur, Landman et al. — 2024
+                </div>
+                <div class="paper-abstract">
+                  Replaces classical linear layers in ViT with orthogonal
+                  quantum layers constructed from Reconfigurable Beam Splitter
+                  (RBS) gates. Parameter count scales as $O(n)$ vs. $O(n^2)$
+                  classical.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="papers/qvit-cherrat-2024.html"
+                    class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2209.08167"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="theory">
+                <div class="paper-meta">
+                  <span class="paper-year">2024</span>
+                  <span class="tag tag-theory">Theory</span>
+                </div>
+                <div class="paper-title">
+                  Barren Plateaus from Dynamical Lie Algebras
+                </div>
+                <div class="paper-authors">
+                  Ragone &amp; Larocca et al. — Nature Physics, 2024
+                </div>
+                <div class="paper-abstract">
+                  Proves barren plateaus emerge from large DLA dimension.
+                  Circuits with exponentially large $|\mathfrak{g}|$ exhibit
+                  $\text{Var}[\partial_\mu E] \in O(1/2^n)$.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="papers/barren-plateaus-dla.html"
+                    class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2309.09342"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="nlp,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2024</span>
+                  <span class="tag tag-nlp">NLP/LLM</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  Quixer: A Quantum Transformer Model
+                </div>
+                <div class="paper-authors">
+                  Khatri, Matos, Coopmans et al. — Jun 2024
+                </div>
+                <div class="paper-abstract">
+                  Full quantum self-attention via LCU and QSVT primitives.
+                  First quantum transformer applied to a practical language
+                  modelling task (Penn Treebank). Open-source implementation.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="papers/hybrid-transformers.html"
+                    class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2406.04305"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="nlp,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2024</span>
+                  <span class="tag tag-nlp">NLP/LLM</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">HyQuT: Hybrid Quantum Transformer for Language Generation</div>
+                <div class="paper-authors">Kong et al. — Nov 2025</div>
+                <div class="paper-abstract">
+                  First hybrid quantum-classical LLM for natural language generation.
+                  10 qubits with 80 quantum gates replace ~10% of classical parameters
+                  in a 150M-parameter model with comparable generation quality.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="papers/hybrid-transformers.html"
+                    class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2511.10653"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="nlp,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2024</span>
+                  <span class="tag tag-nlp">NLP/LLM</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  QTHA: Quantum Token-based Hybrid Attention
+                </div>
+                <div class="paper-authors">Various — 2024</div>
+                <div class="paper-abstract">
+                  Per-token quantum circuits compute attention weights. Quantum
+                  rotations parameterize the compatibility function; combines
+                  with classical feedforward layers.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="papers/hybrid-transformers.html"
+                    class="btn btn-primary"
+                    >Analysis</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="gen,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2024</span>
+                  <span class="tag tag-gen">Generative</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  Generative QML via Denoising Diffusion Probabilistic Models (QuDDPM)
+                </div>
+                <div class="paper-authors">
+                  Cacioppo, Bordoni et al. — Oct 2023
+                </div>
+                <div class="paper-abstract">
+                  Replaces the classical score network with a variational
+                  quantum circuit. Decoherence channels provide a natural
+                  quantum noise schedule for the forward process.
+                </div>
+                <div class="paper-links">
+                  <a href="papers/quddpm.html" class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2310.05866"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="gen,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2024</span>
+                  <span class="tag tag-gen">Generative</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  Mixed-State Quantum DDPM (MSQuDDPM)
+                </div>
+                <div class="paper-authors">Various — Nov 2024</div>
+                <div class="paper-abstract">
+                  Mixed-state extension of QuDDPM; eliminates need for scrambling
+                  unitaries by adapting quantum noise channels directly to the model.
+                  Multi-resolution quantum circuit hierarchy.
+                </div>
+                <div class="paper-links">
+                  <a href="papers/quddpm.html" class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2411.17608"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="hw,news">
+                <div class="paper-meta">
+                  <span
+                    class="paper-year"
+                    style="background: var(--green); color: #000"
+                    >Dec 2024</span
+                  >
+                  <span class="tag tag-hw">Hardware</span>
+                  <span class="tag tag-news">Milestone</span>
+                </div>
+                <div class="paper-title">
+                  Google Willow: Below-Threshold Quantum Error Correction
+                </div>
+                <div class="paper-authors">
+                  Google Quantum AI — December 2024
+                </div>
+                <div class="paper-abstract">
+                  First experimental demonstration where increasing code
+                  distance decreases logical error rate (below-threshold QEC).
+                  105 qubits; RCS task $10^{25}\times$ faster than classical
+                  supercomputers.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="https://arxiv.org/abs/2412.14256"
+                    target="_blank"
+                    class="btn btn-cyan"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2023 -->
+          <div class="timeline-year-group">
+            <div class="timeline-year-header">
+              <span class="timeline-year-label">2023</span>
+              <div class="timeline-year-line"></div>
+            </div>
+            <div class="grid-2">
+              <div class="card paper-card" data-tags="algo,hybrid">
+                <div class="paper-meta">
+                  <span class="paper-year">2023</span>
+                  <span class="tag tag-algo">Algorithms</span>
+                  <span class="tag tag-hybrid">Hybrid Q-C</span>
+                </div>
+                <div class="paper-title">
+                  Quantum-Enhanced Markov Chain Monte Carlo
+                </div>
+                <div class="paper-authors">
+                  Layden, Mazzola, Lam, Motta et al. — <em>Nature</em> 2023
+                </div>
+                <div class="paper-abstract">
+                  Uses quantum coherence to propose non-local MCMC moves.
+                  Provably mixes faster than classical MCMC for certain target
+                  distributions. Demonstrated on 27-qubit IBM processors.
+                </div>
+                <div class="paper-links">
+                  <a href="papers/hhl-qsvt.html" class="btn btn-primary"
+                    >See HHL/QSVT</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2203.12497"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="theory">
+                <div class="paper-meta">
+                  <span class="paper-year">2023</span>
+                  <span class="tag tag-theory">Theory</span>
+                </div>
+                <div class="paper-title">
+                  Exponential Concentration in Quantum Kernel Methods
+                </div>
+                <div class="paper-authors">
+                  Thanasilp, Wang, Cerezo, Holmes — 2023
+                </div>
+                <div class="paper-abstract">
+                  Shows kernel values concentrate exponentially in the number of
+                  qubits for random circuits, undermining quantum advantage
+                  claims. Identifies conditions for avoiding concentration.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="https://arxiv.org/abs/2208.11060"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2022 -->
+          <div class="timeline-year-group">
+            <div class="timeline-year-header">
+              <span class="timeline-year-label">2022</span>
+              <div class="timeline-year-line"></div>
+            </div>
+            <div class="grid-2">
+              <div class="card paper-card" data-tags="algo">
+                <div class="paper-meta">
+                  <span class="paper-year">2022</span>
+                  <span class="tag tag-algo">Algorithms</span>
+                </div>
+                <div class="paper-title">TETRIS-ADAPT-VQE</div>
+                <div class="paper-authors">
+                  Anastasiou, Sharma, Mayhall et al. — 2022
+                </div>
+                <div class="paper-abstract">
+                  Problem-tailored ADAPT-VQE variant that simultaneously adds
+                  multiple operators forming a "tetromino" pattern in circuit
+                  space. Reduces circuit depth vs. vanilla ADAPT.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="https://arxiv.org/abs/2209.10926"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="vision,theory">
+                <div class="paper-meta">
+                  <span class="paper-year">2022</span>
+                  <span class="tag tag-vision">Vision</span>
+                  <span class="tag tag-theory">Theory</span>
+                </div>
+                <div class="paper-title">
+                  Quantum Convolutional Neural Networks
+                </div>
+                <div class="paper-authors">
+                  Cong, Choi, Lukin — <em>Nature Physics</em> 2019/2022
+                </div>
+                <div class="paper-abstract">
+                  QCNNs mimic classical CNNs using alternating quantum
+                  convolution (local entangling) and pooling (partial
+                  measurement + feed-forward) layers. Efficient classically
+                  simulable special case.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="https://arxiv.org/abs/1810.03912"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2021 -->
+          <div class="timeline-year-group">
+            <div class="timeline-year-header">
+              <span class="timeline-year-label">2021</span>
+              <div class="timeline-year-line"></div>
+            </div>
+            <div class="grid-2">
+              <div class="card paper-card" data-tags="nlp">
+                <div class="paper-meta">
+                  <span class="paper-year">2021</span>
+                  <span class="tag tag-nlp">NLP/LLM</span>
+                </div>
+                <div class="paper-title">
+                  lambeq: High-Level Python Library for Quantum NLP
+                </div>
+                <div class="paper-authors">
+                  Kartsaklis, Fan, Yeung, Pearson et al. — 2021
+                </div>
+                <div class="paper-abstract">
+                  Implements DisCoCat framework: parses sentences to string
+                  diagrams, applies rewrite rules, translates to quantum
+                  circuits via functorial semantics. PyTorch &amp; Qiskit
+                  backends.
+                </div>
+                <div class="paper-links">
+                  <a href="papers/discocat-lambeq.html" class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/2110.04236"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="algo">
+                <div class="paper-meta">
+                  <span class="paper-year">2021</span>
+                  <span class="tag tag-algo">Algorithms</span>
+                </div>
+                <div class="paper-title">
+                  ADAPT-VQE: Adaptive Derivative-Assembled VQE
+                </div>
+                <div class="paper-authors">
+                  Grimsley, Economou, Barnes, Mayhall — 2021
+                </div>
+                <div class="paper-abstract">
+                  Iteratively grows ansatz by selecting operators with largest
+                  gradient magnitude. Avoids barren plateaus via greedy circuit
+                  construction; achieves chemical accuracy with shallower
+                  circuits.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="https://arxiv.org/abs/1812.11173"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2019–2020 -->
+          <div class="timeline-year-group">
+            <div class="timeline-year-header">
+              <span class="timeline-year-label">2009–20</span>
+              <div class="timeline-year-line"></div>
+            </div>
+            <div class="grid-2">
+              <div class="card paper-card" data-tags="algo">
+                <div class="paper-meta">
+                  <span class="paper-year">2009</span>
+                  <span class="tag tag-algo">Algorithms</span>
+                </div>
+                <div class="paper-title">
+                  HHL: Quantum Algorithm for Linear Systems
+                </div>
+                <div class="paper-authors">
+                  Harrow, Hassidim, Lloyd — <em>PRL</em> 2009
+                </div>
+                <div class="paper-abstract">
+                  Solves $A|x\rangle=|b\rangle$ in $O(\log N \cdot
+                  \kappa^2/\epsilon)$ for sparse, well-conditioned $A$.
+                  Exponential speedup over classical; caveats on state
+                  preparation and readout.
+                </div>
+                <div class="paper-links">
+                  <a href="papers/hhl-qsvt.html" class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/0811.3171"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="theory">
+                <div class="paper-meta">
+                  <span class="paper-year">2019</span>
+                  <span class="tag tag-theory">Theory</span>
+                </div>
+                <div class="paper-title">
+                  Dequantization: Classical Algorithms for QML Tasks
+                </div>
+                <div class="paper-authors">Ewin Tang — 2019</div>
+                <div class="paper-abstract">
+                  Shows sampling-based classical algorithms achieve similar
+                  complexities to HHL for many ML tasks when given similar data
+                  access (quantum-inspired). Resets claims of quantum supremacy
+                  for ML.
+                </div>
+                <div class="paper-links">
+                  <a
+                    href="https://arxiv.org/abs/1811.00414"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="nlp">
+                <div class="paper-meta">
+                  <span class="paper-year">2010–20</span>
+                  <span class="tag tag-nlp">NLP/LLM</span>
+                </div>
+                <div class="paper-title">
+                  DisCoCat: Compositional Distributional Quantum NLP
+                </div>
+                <div class="paper-authors">
+                  Coecke, Sadrzadeh, Clark — 2010; Meichanetzidis et al. — 2020
+                </div>
+                <div class="paper-abstract">
+                  Categorical framework: grammar → string diagram → quantum
+                  circuit. Noun meanings = quantum states; verbs = quantum
+                  channels. Meaning composition = circuit composition.
+                </div>
+                <div class="paper-links">
+                  <a href="papers/discocat-lambeq.html" class="btn btn-primary"
+                    >Analysis</a
+                  >
+                </div>
+              </div>
+              <div class="card paper-card" data-tags="algo">
+                <div class="paper-meta">
+                  <span class="paper-year">2019</span>
+                  <span class="tag tag-algo">Algorithms</span>
+                </div>
+                <div class="paper-title">
+                  QSVT: Quantum Singular Value Transformation
+                </div>
+                <div class="paper-authors">
+                  Gilyén, Su, Low, Wiebe — STOC 2019
+                </div>
+                <div class="paper-abstract">
+                  Unifies quantum algorithms via block-encoding + quantum signal
+                  processing. Any polynomial $p(A/\alpha)$ can be applied to a
+                  block-encoded matrix. Subsumes HHL, phase estimation,
+                  amplitude amplification.
+                </div>
+                <div class="paper-links">
+                  <a href="papers/hhl-qsvt.html" class="btn btn-primary"
+                    >Analysis</a
+                  >
+                  <a
+                    href="https://arxiv.org/abs/1806.01838"
+                    target="_blank"
+                    class="btn btn-ghost"
+                    >arXiv</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /timeline -->
+      </div>
+    </section>
+
+    <!-- Hardware Milestones -->
+    <section id="hardware" style="background: var(--surface)">
+      <div class="container">
+        <div class="section-title">
+          <div class="section-icon">⚛️</div>
+          <h2>Hardware Milestones</h2>
+          <div class="section-line"></div>
+        </div>
+        <p class="text-muted" style="margin-bottom: 1.5rem">
+          Key processors powering quantum ML research in the pre-fault-tolerant
+          era.
+        </p>
+        <div class="grid-3">
+          <div class="milestone-card card">
+            <div class="milestone-org">Google Quantum AI</div>
+            <div class="milestone-name">Willow</div>
+            <div class="milestone-date">December 2024</div>
+            <ul class="milestone-highlights">
+              <li>105 physical qubits (superconducting)</li>
+              <li>
+                <strong>Below-threshold QEC</strong> — first ever demonstration
+              </li>
+              <li>Error ∝ $e^{-d/d_0}$ with code distance $d$</li>
+              <li>RCS: $10^{25}\times$ classical supercomputer</li>
+              <li>Surface code distance 3, 5, 7 experiments</li>
+            </ul>
+            <div class="hw-spec">
+              <span class="hw-spec-item">105 qubits</span>
+              <span class="hw-spec-item">Superconducting</span>
+              <span class="hw-spec-item">Below-threshold QEC</span>
+            </div>
+          </div>
+
+          <div class="milestone-card card">
+            <div class="milestone-org">Quantinuum</div>
+            <div class="milestone-name">Helios</div>
+            <div class="milestone-date">2025</div>
+            <ul class="milestone-highlights">
+              <li>56 fully-connected qubits (trapped ion)</li>
+              <li>$>99.9\%$ two-qubit gate fidelity</li>
+              <li>Native mid-circuit measurement &amp; reset</li>
+              <li>All-to-all connectivity (no SWAP overhead)</li>
+              <li>Long coherence times: $T_2 \sim$ seconds</li>
+            </ul>
+            <div class="hw-spec">
+              <span class="hw-spec-item">56 qubits</span>
+              <span class="hw-spec-item">Trapped Ion</span>
+              <span class="hw-spec-item">&gt;99.9% fidelity</span>
+            </div>
+          </div>
+
+          <div class="milestone-card card">
+            <div class="milestone-org">IBM Quantum</div>
+            <div class="milestone-name">Heron r2</div>
+            <div class="milestone-date">2024–2025</div>
+            <ul class="milestone-highlights">
+              <li>156 qubits (fixed-frequency, tunable coupler)</li>
+              <li>Reduced crosstalk vs. Eagle/Falcon</li>
+              <li>Quantum volume 128+ per chip cluster</li>
+              <li>Backbone of IBM Quantum Network</li>
+              <li>Enables 1000+ qubit via modular linking</li>
+            </ul>
+            <div class="hw-spec">
+              <span class="hw-spec-item">156 qubits</span>
+              <span class="hw-spec-item">Superconducting</span>
+              <span class="hw-spec-item">Tunable coupler</span>
+            </div>
+          </div>
+
+          <div class="milestone-card card">
+            <div class="milestone-org">D-Wave</div>
+            <div class="milestone-name">Advantage2 (Prototype)</div>
+            <div class="milestone-date">2023–2024</div>
+            <ul class="milestone-highlights">
+              <li>Zephyr topology — 20 connections/qubit</li>
+              <li>Lower noise vs Pegasus graph</li>
+              <li>Optimised for combinatorial optimisation via QA</li>
+              <li>Hybrid solvers bridge classical + quantum</li>
+            </ul>
+            <div class="hw-spec">
+              <span class="hw-spec-item">~7000 qubits</span>
+              <span class="hw-spec-item">Quantum Annealing</span>
+              <span class="hw-spec-item">Zephyr</span>
+            </div>
+          </div>
+
+          <div class="milestone-card card">
+            <div class="milestone-org">IonQ</div>
+            <div class="milestone-name">Forte Enterprise</div>
+            <div class="milestone-date">2024–2025</div>
+            <ul class="milestone-highlights">
+              <li>35 algorithmic qubits (#AQ35)</li>
+              <li>Barium ion platform — dual species</li>
+              <li>Native two-qubit gate: MS (Mølmer-Sørensen)</li>
+              <li>Cloud-accessible via AWS Braket &amp; Azure</li>
+            </ul>
+            <div class="hw-spec">
+              <span class="hw-spec-item">35 #AQ</span>
+              <span class="hw-spec-item">Trapped Ion (Ba)</span>
+              <span class="hw-spec-item">Cloud</span>
+            </div>
+          </div>
+
+          <div class="milestone-card card">
+            <div class="milestone-org">PsiQuantum</div>
+            <div class="milestone-name">Photonic QC (Roadmap)</div>
+            <div class="milestone-date">2026+ target</div>
+            <ul class="milestone-highlights">
+              <li>Silicon photonics — room temperature</li>
+              <li>Fusion-based quantum computation (FBQC)</li>
+              <li>Targets millions of physical photonic qubits</li>
+              <li>Fault-tolerant from the ground up</li>
+            </ul>
+            <div class="hw-spec">
+              <span class="hw-spec-item">Photonic</span>
+              <span class="hw-spec-item">FBQC</span>
+              <span class="hw-spec-item">CMOS fab</span>
             </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- 2023 -->
-      <div class="timeline-year-group">
-        <div class="timeline-year-header">
-          <span class="timeline-year-label">2023</span>
-          <div class="timeline-year-line"></div>
+    <!-- Conferences -->
+    <section id="conferences">
+      <div class="container">
+        <div class="section-title">
+          <div class="section-icon">🎓</div>
+          <h2>Key Conferences &amp; Venues</h2>
+          <div class="section-line"></div>
         </div>
-        <div class="grid-2">
-          <div class="card paper-card" data-tags="algo,hybrid">
-            <div class="paper-meta">
-              <span class="paper-year">2023</span>
-              <span class="tag tag-algo">Algorithms</span>
-              <span class="tag tag-hybrid">Hybrid Q-C</span>
+        <p class="text-muted" style="margin-bottom: 1.5rem">
+          Conferences publishing quantum ML, quantum computing, and hybrid AI
+          research.
+        </p>
+        <div style="overflow-x: auto">
+          <table class="conf-table">
+            <thead>
+              <tr>
+                <th>Conference</th>
+                <th>Full Name</th>
+                <th>Focus</th>
+                <th>Typical Dates</th>
+                <th>Submission</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="conf-name">QIP</span></td>
+                <td>Quantum Information Processing</td>
+                <td>Core quantum computing, algorithms, QML theory</td>
+                <td class="conf-date">Jan–Feb annually</td>
+                <td class="conf-deadline">Sep–Oct prior year</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">NeurIPS</span></td>
+                <td>Neural Information Processing Systems</td>
+                <td>ML/DL including QML workshop tracks</td>
+                <td class="conf-date">December annually</td>
+                <td class="conf-deadline">May–Jun</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">ICML</span></td>
+                <td>Int'l Conference on Machine Learning</td>
+                <td>ML theory; QML workshop (QuantumML@ICML)</td>
+                <td class="conf-date">July annually</td>
+                <td class="conf-deadline">Jan–Feb</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">ICLR</span></td>
+                <td>Int'l Conference on Learning Representations</td>
+                <td>Deep learning; quantum-enhanced models</td>
+                <td class="conf-date">April–May annually</td>
+                <td class="conf-deadline">Sep–Oct prior year</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">APS March</span></td>
+                <td>APS March Meeting</td>
+                <td>Quantum hardware, condensed matter, QML</td>
+                <td class="conf-date">March annually</td>
+                <td class="conf-deadline">Nov prior year</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">IEEE QCE</span></td>
+                <td>
+                  IEEE Int'l Conference on Quantum Computing &amp; Engineering
+                </td>
+                <td>Engineering aspects of quantum computing</td>
+                <td class="conf-date">September annually</td>
+                <td class="conf-deadline">April</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">Nature Physics</span></td>
+                <td>Nature Physics (journal)</td>
+                <td>Flagship for experimental QML/hardware results</td>
+                <td class="conf-date">Ongoing</td>
+                <td class="conf-deadline">Continuous</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">PRX Quantum</span></td>
+                <td>Physical Review X Quantum</td>
+                <td>High-impact quantum computing &amp; QML papers</td>
+                <td class="conf-date">Ongoing</td>
+                <td class="conf-deadline">Continuous</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">Quantum</span></td>
+                <td>Quantum (Verein Quantenjournal)</td>
+                <td>Open-access quantum information &amp; algorithms</td>
+                <td class="conf-date">Ongoing</td>
+                <td class="conf-deadline">Continuous</td>
+              </tr>
+              <tr>
+                <td><span class="conf-name">AAAI QAI</span></td>
+                <td>AAAI Workshop on Quantum AI</td>
+                <td>AI applications of quantum computing</td>
+                <td class="conf-date">February (with AAAI)</td>
+                <td class="conf-deadline">Oct–Nov prior year</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Key arXiv categories -->
+        <div style="margin-top: 2rem">
+          <h3
+            style="
+              font-size: 1.05rem;
+              margin-bottom: 1rem;
+              color: var(--primary-l);
+            "
+          >
+            Key arXiv Categories to Follow
+          </h3>
+          <div class="grid-4">
+            <div class="card" style="padding: 1rem; text-align: center">
+              <div
+                style="
+                  font-family: monospace;
+                  color: var(--cyan);
+                  font-weight: 700;
+                  margin-bottom: 0.4rem;
+                "
+              >
+                quant-ph
+              </div>
+              <div style="font-size: 0.8rem; color: var(--muted)">
+                Quantum algorithms, QML theory, hardware
+              </div>
             </div>
-            <div class="paper-title">Quantum-Enhanced Markov Chain Monte Carlo</div>
-            <div class="paper-authors">Layden, Mazzola, Lam, Motta et al. — <em>Nature</em> 2023</div>
-            <div class="paper-abstract">Uses quantum coherence to propose non-local MCMC moves. Provably mixes faster than classical MCMC for certain target distributions. Demonstrated on 27-qubit IBM processors.</div>
-            <div class="paper-links">
-              <a href="papers/hhl-qsvt.html" class="btn btn-primary">See HHL/QSVT</a>
-              <a href="https://arxiv.org/abs/2203.12497" target="_blank" class="btn btn-ghost">arXiv</a>
+            <div class="card" style="padding: 1rem; text-align: center">
+              <div
+                style="
+                  font-family: monospace;
+                  color: var(--cyan);
+                  font-weight: 700;
+                  margin-bottom: 0.4rem;
+                "
+              >
+                cs.LG
+              </div>
+              <div style="font-size: 0.8rem; color: var(--muted)">
+                Machine learning - hybrid QML papers
+              </div>
+            </div>
+            <div class="card" style="padding: 1rem; text-align: center">
+              <div
+                style="
+                  font-family: monospace;
+                  color: var(--cyan);
+                  font-weight: 700;
+                  margin-bottom: 0.4rem;
+                "
+              >
+                cs.CL
+              </div>
+              <div style="font-size: 0.8rem; color: var(--muted)">
+                Computational linguistics - Quantum NLP
+              </div>
+            </div>
+            <div class="card" style="padding: 1rem; text-align: center">
+              <div
+                style="
+                  font-family: monospace;
+                  color: var(--cyan);
+                  font-weight: 700;
+                  margin-bottom: 0.4rem;
+                "
+              >
+                cs.CV
+              </div>
+              <div style="font-size: 0.8rem; color: var(--muted)">
+                Computer vision - Quantum vision models
+              </div>
             </div>
           </div>
-          <div class="card paper-card" data-tags="theory">
-            <div class="paper-meta">
-              <span class="paper-year">2023</span>
-              <span class="tag tag-theory">Theory</span>
-            </div>
-            <div class="paper-title">Exponential Concentration in Quantum Kernel Methods</div>
-            <div class="paper-authors">Thanasilp, Wang, Cerezo, Holmes — 2023</div>
-            <div class="paper-abstract">Shows kernel values concentrate exponentially in the number of qubits for random circuits, undermining quantum advantage claims. Identifies conditions for avoiding concentration.</div>
-            <div class="paper-links">
-              <a href="https://arxiv.org/abs/2208.11060" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
         </div>
       </div>
+    </section>
 
-      <!-- 2022 -->
-      <div class="timeline-year-group">
-        <div class="timeline-year-header">
-          <span class="timeline-year-label">2022</span>
-          <div class="timeline-year-line"></div>
-        </div>
-        <div class="grid-2">
-          <div class="card paper-card" data-tags="algo">
-            <div class="paper-meta">
-              <span class="paper-year">2022</span>
-              <span class="tag tag-algo">Algorithms</span>
-            </div>
-            <div class="paper-title">TETRIS-ADAPT-VQE</div>
-            <div class="paper-authors">Anastasiou, Sharma, Mayhall et al. — 2022</div>
-            <div class="paper-abstract">Problem-tailored ADAPT-VQE variant that simultaneously adds multiple operators forming a "tetromino" pattern in circuit space. Reduces circuit depth vs. vanilla ADAPT.</div>
-            <div class="paper-links">
-              <a href="https://arxiv.org/abs/2209.10926" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="vision,theory">
-            <div class="paper-meta">
-              <span class="paper-year">2022</span>
-              <span class="tag tag-vision">Vision</span>
-              <span class="tag tag-theory">Theory</span>
-            </div>
-            <div class="paper-title">Quantum Convolutional Neural Networks</div>
-            <div class="paper-authors">Cong, Choi, Lukin — <em>Nature Physics</em> 2019/2022</div>
-            <div class="paper-abstract">QCNNs mimic classical CNNs using alternating quantum convolution (local entangling) and pooling (partial measurement + feed-forward) layers. Efficient classically simulable special case.</div>
-            <div class="paper-links">
-              <a href="https://arxiv.org/abs/1810.03912" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-        </div>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p>
+          <strong style="color: var(--primary-l)">Quantum AI Hub</strong> —
+          Maintained by
+          <a href="mailto:rupesh32003@gmail.com">Rupesh @ IIT Bombay</a> · Last
+          updated May 2026
+        </p>
+        <p style="margin-top: 0.4rem; font-size: 0.75rem">
+          Papers linked to arXiv / official sources. This site is for research
+          tracking only. Press
+          <kbd
+            style="
+              background: var(--card);
+              border: 1px solid var(--border);
+              padding: 0.1rem 0.3rem;
+              border-radius: 3px;
+              font-size: 0.75rem;
+            "
+            >/</kbd
+          >
+          to search.
+        </p>
       </div>
+    </footer>
 
-      <!-- 2021 -->
-      <div class="timeline-year-group">
-        <div class="timeline-year-header">
-          <span class="timeline-year-label">2021</span>
-          <div class="timeline-year-line"></div>
-        </div>
-        <div class="grid-2">
-          <div class="card paper-card" data-tags="nlp">
-            <div class="paper-meta">
-              <span class="paper-year">2021</span>
-              <span class="tag tag-nlp">NLP/LLM</span>
-            </div>
-            <div class="paper-title">lambeq: High-Level Python Library for Quantum NLP</div>
-            <div class="paper-authors">Kartsaklis, Fan, Yeung, Pearson et al. — 2021</div>
-            <div class="paper-abstract">Implements DisCoCat framework: parses sentences to string diagrams, applies rewrite rules, translates to quantum circuits via functorial semantics. PyTorch &amp; Qiskit backends.</div>
-            <div class="paper-links">
-              <a href="papers/discocat-lambeq.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/2110.04236" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="algo">
-            <div class="paper-meta">
-              <span class="paper-year">2021</span>
-              <span class="tag tag-algo">Algorithms</span>
-            </div>
-            <div class="paper-title">ADAPT-VQE: Adaptive Derivative-Assembled VQE</div>
-            <div class="paper-authors">Grimsley, Economou, Barnes, Mayhall — 2021</div>
-            <div class="paper-abstract">Iteratively grows ansatz by selecting operators with largest gradient magnitude. Avoids barren plateaus via greedy circuit construction; achieves chemical accuracy with shallower circuits.</div>
-            <div class="paper-links">
-              <a href="https://arxiv.org/abs/1812.11173" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2019–2020 -->
-      <div class="timeline-year-group">
-        <div class="timeline-year-header">
-          <span class="timeline-year-label">2009–20</span>
-          <div class="timeline-year-line"></div>
-        </div>
-        <div class="grid-2">
-          <div class="card paper-card" data-tags="algo">
-            <div class="paper-meta">
-              <span class="paper-year">2009</span>
-              <span class="tag tag-algo">Algorithms</span>
-            </div>
-            <div class="paper-title">HHL: Quantum Algorithm for Linear Systems</div>
-            <div class="paper-authors">Harrow, Hassidim, Lloyd — <em>PRL</em> 2009</div>
-            <div class="paper-abstract">Solves $A|x\rangle=|b\rangle$ in $O(\log N \cdot \kappa^2/\epsilon)$ for sparse, well-conditioned $A$. Exponential speedup over classical; caveats on state preparation and readout.</div>
-            <div class="paper-links">
-              <a href="papers/hhl-qsvt.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/0811.3171" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="theory">
-            <div class="paper-meta">
-              <span class="paper-year">2019</span>
-              <span class="tag tag-theory">Theory</span>
-            </div>
-            <div class="paper-title">Dequantization: Classical Algorithms for QML Tasks</div>
-            <div class="paper-authors">Ewin Tang — 2019</div>
-            <div class="paper-abstract">Shows sampling-based classical algorithms achieve similar complexities to HHL for many ML tasks when given similar data access (quantum-inspired). Resets claims of quantum supremacy for ML.</div>
-            <div class="paper-links">
-              <a href="https://arxiv.org/abs/1811.00414" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="nlp">
-            <div class="paper-meta">
-              <span class="paper-year">2010–20</span>
-              <span class="tag tag-nlp">NLP/LLM</span>
-            </div>
-            <div class="paper-title">DisCoCat: Compositional Distributional Quantum NLP</div>
-            <div class="paper-authors">Coecke, Sadrzadeh, Clark — 2010; Meichanetzidis et al. — 2020</div>
-            <div class="paper-abstract">Categorical framework: grammar → string diagram → quantum circuit. Noun meanings = quantum states; verbs = quantum channels. Meaning composition = circuit composition.</div>
-            <div class="paper-links">
-              <a href="papers/discocat-lambeq.html" class="btn btn-primary">Analysis</a>
-            </div>
-          </div>
-          <div class="card paper-card" data-tags="algo">
-            <div class="paper-meta">
-              <span class="paper-year">2019</span>
-              <span class="tag tag-algo">Algorithms</span>
-            </div>
-            <div class="paper-title">QSVT: Quantum Singular Value Transformation</div>
-            <div class="paper-authors">Gilyén, Su, Low, Wiebe — STOC 2019</div>
-            <div class="paper-abstract">Unifies quantum algorithms via block-encoding + quantum signal processing. Any polynomial $p(A/\alpha)$ can be applied to a block-encoded matrix. Subsumes HHL, phase estimation, amplitude amplification.</div>
-            <div class="paper-links">
-              <a href="papers/hhl-qsvt.html" class="btn btn-primary">Analysis</a>
-              <a href="https://arxiv.org/abs/1806.01838" target="_blank" class="btn btn-ghost">arXiv</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /timeline -->
-  </div>
-</section>
-
-<!-- Hardware Milestones -->
-<section id="hardware" style="background:var(--surface)">
-  <div class="container">
-    <div class="section-title">
-      <div class="section-icon">⚛️</div>
-      <h2>Hardware Milestones</h2>
-      <div class="section-line"></div>
-    </div>
-    <p class="text-muted" style="margin-bottom:1.5rem">Key processors powering quantum ML research in the pre-fault-tolerant era.</p>
-    <div class="grid-3">
-
-      <div class="milestone-card card">
-        <div class="milestone-org">Google Quantum AI</div>
-        <div class="milestone-name">Willow</div>
-        <div class="milestone-date">December 2024</div>
-        <ul class="milestone-highlights">
-          <li>105 physical qubits (superconducting)</li>
-          <li><strong>Below-threshold QEC</strong> — first ever demonstration</li>
-          <li>Error ∝ $e^{-d/d_0}$ with code distance $d$</li>
-          <li>RCS: $10^{25}\times$ classical supercomputer</li>
-          <li>Surface code distance 3, 5, 7 experiments</li>
-        </ul>
-        <div class="hw-spec">
-          <span class="hw-spec-item">105 qubits</span>
-          <span class="hw-spec-item">Superconducting</span>
-          <span class="hw-spec-item">Below-threshold QEC</span>
-        </div>
-      </div>
-
-      <div class="milestone-card card">
-        <div class="milestone-org">Quantinuum</div>
-        <div class="milestone-name">Helios</div>
-        <div class="milestone-date">2025</div>
-        <ul class="milestone-highlights">
-          <li>56 fully-connected qubits (trapped ion)</li>
-          <li>$>99.9\%$ two-qubit gate fidelity</li>
-          <li>Native mid-circuit measurement &amp; reset</li>
-          <li>All-to-all connectivity (no SWAP overhead)</li>
-          <li>Long coherence times: $T_2 \sim$ seconds</li>
-        </ul>
-        <div class="hw-spec">
-          <span class="hw-spec-item">56 qubits</span>
-          <span class="hw-spec-item">Trapped Ion</span>
-          <span class="hw-spec-item">&gt;99.9% fidelity</span>
-        </div>
-      </div>
-
-      <div class="milestone-card card">
-        <div class="milestone-org">IBM Quantum</div>
-        <div class="milestone-name">Heron r2</div>
-        <div class="milestone-date">2024–2025</div>
-        <ul class="milestone-highlights">
-          <li>156 qubits (fixed-frequency, tunable coupler)</li>
-          <li>Reduced crosstalk vs. Eagle/Falcon</li>
-          <li>Quantum volume 128+ per chip cluster</li>
-          <li>Backbone of IBM Quantum Network</li>
-          <li>Enables 1000+ qubit via modular linking</li>
-        </ul>
-        <div class="hw-spec">
-          <span class="hw-spec-item">156 qubits</span>
-          <span class="hw-spec-item">Superconducting</span>
-          <span class="hw-spec-item">Tunable coupler</span>
-        </div>
-      </div>
-
-      <div class="milestone-card card">
-        <div class="milestone-org">D-Wave</div>
-        <div class="milestone-name">Advantage2 (Prototype)</div>
-        <div class="milestone-date">2023–2024</div>
-        <ul class="milestone-highlights">
-          <li>Zephyr topology — 20 connections/qubit</li>
-          <li>Lower noise vs Pegasus graph</li>
-          <li>Optimised for combinatorial optimisation via QA</li>
-          <li>Hybrid solvers bridge classical + quantum</li>
-        </ul>
-        <div class="hw-spec">
-          <span class="hw-spec-item">~7000 qubits</span>
-          <span class="hw-spec-item">Quantum Annealing</span>
-          <span class="hw-spec-item">Zephyr</span>
-        </div>
-      </div>
-
-      <div class="milestone-card card">
-        <div class="milestone-org">IonQ</div>
-        <div class="milestone-name">Forte Enterprise</div>
-        <div class="milestone-date">2024–2025</div>
-        <ul class="milestone-highlights">
-          <li>35 algorithmic qubits (#AQ35)</li>
-          <li>Barium ion platform — dual species</li>
-          <li>Native two-qubit gate: MS (Mølmer-Sørensen)</li>
-          <li>Cloud-accessible via AWS Braket &amp; Azure</li>
-        </ul>
-        <div class="hw-spec">
-          <span class="hw-spec-item">35 #AQ</span>
-          <span class="hw-spec-item">Trapped Ion (Ba)</span>
-          <span class="hw-spec-item">Cloud</span>
-        </div>
-      </div>
-
-      <div class="milestone-card card">
-        <div class="milestone-org">PsiQuantum</div>
-        <div class="milestone-name">Photonic QC (Roadmap)</div>
-        <div class="milestone-date">2026+ target</div>
-        <ul class="milestone-highlights">
-          <li>Silicon photonics — room temperature</li>
-          <li>Fusion-based quantum computation (FBQC)</li>
-          <li>Targets millions of physical photonic qubits</li>
-          <li>Fault-tolerant from the ground up</li>
-        </ul>
-        <div class="hw-spec">
-          <span class="hw-spec-item">Photonic</span>
-          <span class="hw-spec-item">FBQC</span>
-          <span class="hw-spec-item">CMOS fab</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- Conferences -->
-<section id="conferences">
-  <div class="container">
-    <div class="section-title">
-      <div class="section-icon">🎓</div>
-      <h2>Key Conferences &amp; Venues</h2>
-      <div class="section-line"></div>
-    </div>
-    <p class="text-muted" style="margin-bottom:1.5rem">Conferences publishing quantum ML, quantum computing, and hybrid AI research.</p>
-    <div style="overflow-x:auto">
-    <table class="conf-table">
-      <thead>
-        <tr>
-          <th>Conference</th>
-          <th>Full Name</th>
-          <th>Focus</th>
-          <th>Typical Dates</th>
-          <th>Submission</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="conf-name">QIP</span></td>
-          <td>Quantum Information Processing</td>
-          <td>Core quantum computing, algorithms, QML theory</td>
-          <td class="conf-date">Jan–Feb annually</td>
-          <td class="conf-deadline">Sep–Oct prior year</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">NeurIPS</span></td>
-          <td>Neural Information Processing Systems</td>
-          <td>ML/DL including QML workshop tracks</td>
-          <td class="conf-date">December annually</td>
-          <td class="conf-deadline">May–Jun</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">ICML</span></td>
-          <td>Int'l Conference on Machine Learning</td>
-          <td>ML theory; QML workshop (QuantumML@ICML)</td>
-          <td class="conf-date">July annually</td>
-          <td class="conf-deadline">Jan–Feb</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">ICLR</span></td>
-          <td>Int'l Conference on Learning Representations</td>
-          <td>Deep learning; quantum-enhanced models</td>
-          <td class="conf-date">April–May annually</td>
-          <td class="conf-deadline">Sep–Oct prior year</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">APS March</span></td>
-          <td>APS March Meeting</td>
-          <td>Quantum hardware, condensed matter, QML</td>
-          <td class="conf-date">March annually</td>
-          <td class="conf-deadline">Nov prior year</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">IEEE QCE</span></td>
-          <td>IEEE Int'l Conference on Quantum Computing &amp; Engineering</td>
-          <td>Engineering aspects of quantum computing</td>
-          <td class="conf-date">September annually</td>
-          <td class="conf-deadline">April</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">Nature Physics</span></td>
-          <td>Nature Physics (journal)</td>
-          <td>Flagship for experimental QML/hardware results</td>
-          <td class="conf-date">Ongoing</td>
-          <td class="conf-deadline">Continuous</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">PRX Quantum</span></td>
-          <td>Physical Review X Quantum</td>
-          <td>High-impact quantum computing &amp; QML papers</td>
-          <td class="conf-date">Ongoing</td>
-          <td class="conf-deadline">Continuous</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">Quantum</span></td>
-          <td>Quantum (Verein Quantenjournal)</td>
-          <td>Open-access quantum information &amp; algorithms</td>
-          <td class="conf-date">Ongoing</td>
-          <td class="conf-deadline">Continuous</td>
-        </tr>
-        <tr>
-          <td><span class="conf-name">AAAI QAI</span></td>
-          <td>AAAI Workshop on Quantum AI</td>
-          <td>AI applications of quantum computing</td>
-          <td class="conf-date">February (with AAAI)</td>
-          <td class="conf-deadline">Oct–Nov prior year</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-    <!-- Key arXiv categories -->
-    <div style="margin-top:2rem">
-      <h3 style="font-size:1.05rem;margin-bottom:1rem;color:var(--primary-l)">Key arXiv Categories to Follow</h3>
-      <div class="grid-4">
-        <div class="card" style="padding:1rem;text-align:center">
-          <div style="font-family:monospace;color:var(--cyan);font-weight:700;margin-bottom:.4rem">quant-ph</div>
-          <div style="font-size:.8rem;color:var(--muted)">Quantum algorithms, QML theory, hardware</div>
-        </div>
-        <div class="card" style="padding:1rem;text-align:center">
-          <div style="font-family:monospace;color:var(--cyan);font-weight:700;margin-bottom:.4rem">cs.LG</div>
-          <div style="font-size:.8rem;color:var(--muted)">Machine learning — hybrid QML papers</div>
-        </div>
-        <div class="card" style="padding:1rem;text-align:center">
-          <div style="font-family:monospace;color:var(--cyan);font-weight:700;margin-bottom:.4rem">cs.CL</div>
-          <div style="font-size:.8rem;color:var(--muted)">Computational linguistics — Quantum NLP</div>
-        </div>
-        <div class="card" style="padding:1rem;text-align:center">
-          <div style="font-family:monospace;color:var(--cyan);font-weight:700;margin-bottom:.4rem">cs.CV</div>
-          <div style="font-size:.8rem;color:var(--muted)">Computer vision — Quantum vision models</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer>
-  <div class="container">
-    <p>
-      <strong style="color:var(--primary-l)">Quantum AI Hub</strong> —
-      Maintained by <a href="mailto:24m0319@iitb.ac.in">Rupesh @ IIT Bombay</a> ·
-      Last updated May 2026
-    </p>
-    <p style="margin-top:.4rem;font-size:.75rem">
-      Papers linked to arXiv / official sources. This site is for research tracking only.
-      Press <kbd style="background:var(--card);border:1px solid var(--border);padding:.1rem .3rem;border-radius:3px;font-size:.75rem">/</kbd> to search.
-    </p>
-  </div>
-</footer>
-
-<script src="assets/js/main.js"></script>
-</body>
+    <script src="assets/js/main.js"></script>
+  </body>
 </html>

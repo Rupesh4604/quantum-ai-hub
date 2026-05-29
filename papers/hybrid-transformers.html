@@ -58,8 +58,11 @@
       <span class="tag tag-hybrid">Hybrid Q-C</span>
     </div>
     <h1 class="paper-page-title">Quantum Transformers for Language: Quixer · HyQuT · QTHA</h1>
-    <div class="paper-page-authors">Nguyen, Umeano, Bhatt et al. (Quixer); Chen, Zhang et al. (HyQuT)</div>
-    <div class="paper-page-venue">arXiv 2024 — <a href="https://arxiv.org/abs/2406.04305" target="_blank" style="color:var(--cyan)">Quixer: 2406.04305</a> · <a href="https://arxiv.org/abs/2412.00831" target="_blank" style="color:var(--cyan)">HyQuT: 2412.00831</a></div>
+    <div class="paper-page-authors">Khatri, Matos, Coopmans et al. (Quixer, 2024); Kong et al. (HyQuT, 2025)</div>
+    <div class="paper-page-venue">
+      Quixer: <a href="https://arxiv.org/abs/2406.04305" target="_blank" style="color:var(--cyan)">arXiv:2406.04305</a> (Jun 2024) ·
+      HyQuT: <a href="https://arxiv.org/abs/2511.10653" target="_blank" style="color:var(--cyan)">arXiv:2511.10653</a> (Nov 2025)
+    </div>
   </div>
 
   <div class="toc">
@@ -93,8 +96,9 @@
   <div class="content-section" id="quixer">
     <h2>2. Quixer: Full Quantum Self-Attention</h2>
     <p>
-      Quixer (Nguyen et al., 2024) implements a fully quantum self-attention mechanism using QRAM-loaded
-      token embeddings and quantum inner product estimation to compute attention weights.
+      Quixer (Khatri, Matos, Coopmans et al., 2024) implements a fully quantum self-attention mechanism using
+      Linear Combination of Unitaries (LCU) and QSVT primitives to realise attention as a quantum operation.
+      It is the first quantum transformer applied to a practical language modelling task (Penn Treebank).
     </p>
 
     <h3>Quantum State Preparation</h3>
@@ -158,9 +162,9 @@ Input tokens: x₁, x₂, ..., xₙ ∈ ℝᵈ
   <div class="content-section" id="hyqut">
     <h2>3. HyQuT: Hybrid Quantum Transformer</h2>
     <p>
-      HyQuT (Chen et al., 2024) takes a more conservative hybrid approach: <strong>classical Q and K</strong> matrices
-      (computed via standard linear layers) with <strong>quantum V</strong> (value) projection
-      via a variational quantum circuit (VQC).
+      HyQuT (Kong et al., Nov 2025) takes a hybrid approach: integrating VQCs into the Transformer
+      at both 8M and 150M parameter scales. Just 10 qubits with 80 quantum gates replace ~10% of
+      classical parameters in the 150M model while achieving comparable generation quality.
     </p>
 
     <h3>Motivation</h3>

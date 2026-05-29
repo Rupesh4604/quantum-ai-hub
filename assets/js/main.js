@@ -6,27 +6,35 @@
 // ---- Paper data (used for search) ----
 const PAPERS = [
   // 2019
-  { year: 2019, title: "Quantum-Inspired Classical Algorithms for PCA and Supervised Clustering", authors: "Tang", tags: ["theory","algo"], url: "https://arxiv.org/abs/1811.00414", key: "tang2019" },
+  // Tang 2019: arXiv:1811.00414 = "A quantum-inspired classical algorithm for recommendation systems"
+  { year: 2019, title: "A Quantum-Inspired Classical Algorithm for Recommendation Systems (Dequantization)", authors: "Tang", tags: ["theory","algo"], url: "https://arxiv.org/abs/1811.00414", key: "tang2019" },
   // 2021
   { year: 2021, title: "lambeq: An Efficient High-Level Python Library for Quantum NLP", authors: "Kartsaklis et al.", tags: ["nlp"], url: "https://arxiv.org/abs/2110.04236", key: "lambeq2021" },
-  { year: 2021, title: "ADAPT-VQE: Adaptive Derivative-Assembled Pseudo-Trotter VQE", authors: "Grimsley et al.", tags: ["algo"], url: "https://arxiv.org/abs/1812.11173", key: "adaptvqe2021", page: "../papers/vqe-variants.html" },
+  // ADAPT-VQE: arXiv:1812.11173 — no dedicated sub-page yet, links to arXiv
+  { year: 2021, title: "ADAPT-VQE: Adaptive Derivative-Assembled Pseudo-Trotter VQE", authors: "Grimsley et al.", tags: ["algo"], url: "https://arxiv.org/abs/1812.11173", key: "adaptvqe2021" },
   // 2022
   { year: 2022, title: "Quantum Convolutional Neural Networks", authors: "Cong, Choi, Lukin", tags: ["vision","theory"], url: "https://arxiv.org/abs/1810.03912", key: "qcnn2022" },
   { year: 2022, title: "TETRIS-ADAPT-VQE: Problem-Tailored Variational Algorithm", authors: "Anastasiou et al.", tags: ["algo"], url: "https://arxiv.org/abs/2209.10926", key: "tetris2022" },
   // 2023
-  { year: 2023, title: "Quantum-Enhanced Markov Chain Monte Carlo", authors: "Layden et al.", tags: ["algo","hybrid"], url: "https://arxiv.org/abs/2203.12497", key: "layden2023", page: "../papers/hhl-qsvt.html" },
+  // ✅ VERIFIED arXiv:2203.12497 — Nature 619, 282–287 (2023)
+  { year: 2023, title: "Quantum-Enhanced Markov Chain Monte Carlo", authors: "Layden, Mazzola, Mishmash, Motta et al.", tags: ["algo","hybrid"], url: "https://arxiv.org/abs/2203.12497", key: "layden2023", page: "../papers/hhl-qsvt.html" },
   { year: 2023, title: "Exponential Concentration in Quantum Kernel Methods", authors: "Thanasilp et al.", tags: ["theory"], url: "https://arxiv.org/abs/2208.11060", key: "thanasilp2023" },
   // 2024
   { year: 2024, title: "Quantum Vision Transformers (QViT)", authors: "Cherrat, Kerenidis, Mathur et al.", tags: ["vision","hybrid"], url: "https://arxiv.org/abs/2209.08167", key: "cherrat2024", page: "../papers/qvit-cherrat-2024.html" },
-  { year: 2024, title: "Barren Plateaus from Dynamical Lie Algebras", authors: "Ragone, Larocca et al.", tags: ["theory"], url: "https://arxiv.org/abs/2309.09342", key: "ragone2024", page: "../papers/barren-plateaus-dla.html" },
-  { year: 2024, title: "Quixer: A Quantum Transformer Model", authors: "Nguyen, Umeano, Bhatt et al.", tags: ["nlp","hybrid"], url: "https://arxiv.org/abs/2406.04305", key: "quixer2024", page: "../papers/hybrid-transformers.html" },
-  { year: 2024, title: "HyQuT: Hybrid Quantum Transformer", authors: "Chen, Zhang et al.", tags: ["nlp","hybrid"], url: "https://arxiv.org/abs/2412.00831", key: "hyqut2024", page: "../papers/hybrid-transformers.html" },
+  { year: 2024, title: "A Lie Algebraic Theory of Barren Plateaus for Deep Parameterized Quantum Circuits", authors: "Ragone, Bakalov, Sauvage, Larocca, Cerezo et al.", tags: ["theory"], url: "https://arxiv.org/abs/2309.09342", key: "ragone2024", page: "../papers/barren-plateaus-dla.html" },
+  // ✅ VERIFIED arXiv:2406.04305 — Khatri, Matos, Coopmans et al.
+  { year: 2024, title: "Quixer: A Quantum Transformer Model", authors: "Khatri, Matos, Coopmans et al.", tags: ["nlp","hybrid"], url: "https://arxiv.org/abs/2406.04305", key: "quixer2024", page: "../papers/hybrid-transformers.html" },
   { year: 2024, title: "QTHA: Quantum Token-based Hybrid Attention", authors: "Various", tags: ["nlp","hybrid"], url: "#", key: "qtha2024", page: "../papers/hybrid-transformers.html" },
-  { year: 2024, title: "QuDDPM: Quantum Denoising Diffusion Probabilistic Models", authors: "Cacioppo et al.", tags: ["gen","hybrid"], url: "https://arxiv.org/abs/2401.07049", key: "quddpm2024", page: "../papers/quddpm.html" },
-  { year: 2024, title: "MSQuDDPM: Multi-Scale Quantum Diffusion", authors: "Various", tags: ["gen","hybrid"], url: "#", key: "msquddpm2024", page: "../papers/quddpm.html" },
+  // ✅ VERIFIED arXiv:2310.05866 — "Generative QML via Denoising Diffusion Probabilistic Models"
+  { year: 2024, title: "Generative Quantum Machine Learning via Denoising Diffusion Probabilistic Models (QuDDPM)", authors: "Cacioppo, Bordoni et al.", tags: ["gen","hybrid"], url: "https://arxiv.org/abs/2310.05866", key: "quddpm2024", page: "../papers/quddpm.html" },
+  // ✅ VERIFIED arXiv:2411.17608 — Mixed-State QuDDPM (MSQuDDPM), Nov 2024
+  { year: 2024, title: "Mixed-State Quantum Denoising Diffusion Probabilistic Model (MSQuDDPM)", authors: "Various", tags: ["gen","hybrid"], url: "https://arxiv.org/abs/2411.17608", key: "msquddpm2024", page: "../papers/quddpm.html" },
   { year: 2024, title: "Google Willow: Below-Threshold Quantum Error Correction", authors: "Google Quantum AI", tags: ["hw","news"], url: "https://arxiv.org/abs/2412.14256", key: "willow2024" },
   // 2025
-  { year: 2025, title: "Barren Plateaus: A Unifying Analysis", authors: "Cerezo, Larocca et al.", tags: ["theory"], url: "https://arxiv.org/abs/2310.06012", key: "cerezo2025", page: "../papers/barren-plateaus-dla.html" },
+  // ✅ VERIFIED arXiv:2405.00781 — Larocca, Thanasilp, Wang, Cerezo et al. (2024, updated 2025)
+  { year: 2025, title: "Barren Plateaus in Variational Quantum Computing (Review)", authors: "Larocca, Thanasilp, Wang, Cerezo et al.", tags: ["theory"], url: "https://arxiv.org/abs/2405.00781", key: "cerezo2025", page: "../papers/barren-plateaus-dla.html" },
+  // ✅ VERIFIED arXiv:2511.10653 — HyQuT "Hybrid Quantum Transformer for Language Generation", Kong et al., Nov 2025
+  { year: 2025, title: "HyQuT: Hybrid Quantum Transformer for Language Generation", authors: "Kong et al.", tags: ["nlp","hybrid"], url: "https://arxiv.org/abs/2511.10653", key: "hyqut2025", page: "../papers/hybrid-transformers.html" },
   { year: 2025, title: "Quantum-PEFT: Parameter-Efficient Fine-Tuning for QNN", authors: "Various", tags: ["nlp","hybrid"], url: "#", key: "qpeft2025" },
   { year: 2025, title: "QMAE: Quantum Masked Autoencoders", authors: "Various", tags: ["vision","hybrid"], url: "#", key: "qmae2025" },
   { year: 2025, title: "FNQS: Foundation Networks for Quantum Systems", authors: "Various", tags: ["hybrid","theory"], url: "#", key: "fnqs2025" },
